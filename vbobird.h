@@ -11,11 +11,11 @@
 class VBOBird : public Drawable {
 private:
     unsigned int vaoHandle;
-    int faces;
+    int nVerts;
 
     void generateVerts();
 public:
-    VBOBird(int number);
+    VBOBird(int base);
 
     void render() const;
 };

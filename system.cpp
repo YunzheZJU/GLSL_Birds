@@ -21,7 +21,7 @@ GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {0, 0, 5};                    // Position of camera
+GLfloat camera[3] = {1, 2, 10};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
@@ -509,8 +509,8 @@ void initVBO() {
 //    plane = new VBOPlane(50.0f, 50.0f, 1, 1);
 //    teapot = new VBOTeapot(14, glm::mat4(1.0f));
 //    torus = new VBOTorus(0.7f * 2, 0.3f * 2, 50, 50);
-    cube = new VBOCube();
-    bird = new VBOBird(1);
+//    cube = new VBOCube();
+    bird = new VBOBird(2);
 }
 
 void setShader() {
