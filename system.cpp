@@ -22,7 +22,7 @@ GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {1, 2, 10};                    // Position of camera
+GLfloat camera[3] = {1, 2, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
@@ -77,6 +77,8 @@ void Redraw() {
     }
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 //    angle += 0.5f;
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
@@ -592,59 +594,47 @@ void updateShaderMVP() {
 }
 
 void setupTexture() {
-//    // Generate and bind the framebuffer
-//    glGenFramebuffers(1, &fboHandle);
-//    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
-
-    // Create the texture object
+    // Create the position texture
     glGenTextures(1, &positionTexture);
     glBindTexture(GL_TEXTURE_2D, positionTexture);
 
     GLfloat *positionData = new GLfloat[1024 * 4];
     for (int i = 0; i < 1024; i++) {
-        GLfloat x = static_cast<GLfloat>(((rand() % 10000) / 10000.0) * BOUNDS - BOUNDS / 2);
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+
         positionData[i * 4] = x;
         positionData[i * 4 + 1] = y;
         positionData[i * 4 + 2] = z;
         positionData[i * 4 + 3] = 1;
     }
-//#ifdef __APPLE__
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
-//#else
-//    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 32, 32);
-//#endif
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-//    // Bind the texture to the FBO
-//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture, 0);
-//
-//    // Create the depth buffer
-//    GLuint depthBuf;
-//    glGenRenderbuffers(1, &depthBuf);
-//    glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
-//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 32, 32);
-//
-//    // Bind the depth buffer to the FBO
-//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-//                              GL_RENDERBUFFER, depthBuf);
-//
-//    // Set the targets for the fragment output variables
-//    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-//    glDrawBuffers(1, drawBuffers);
-//
-//    GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-//    if (result == GL_FRAMEBUFFER_COMPLETE) {
-//        cout << "Framebuffer is complete" << endl;
-//    } else {
-//        cout << "Framebuffer error: " << result << endl;
-//    }
+    // Create the position texture
+    glGenTextures(1, &velocityTexture);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 
-//    // Unbind the framebuffer, and revert to default framebuffer
-//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GLfloat *velocityData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+
+        velocityData[i * 4] = x * 10;
+        velocityData[i * 4 + 1] = y * 10;
+        velocityData[i * 4 + 2] = z * 10;
+        velocityData[i * 4 + 3] = 1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 }
 
 void setupVAO() {
