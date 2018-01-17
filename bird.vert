@@ -58,5 +58,6 @@ void main() {
     newPosition += pos;
 
     Color = vec4(VertexColor, 1.0);
+
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
 }

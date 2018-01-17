@@ -53,6 +53,6 @@ using glm::mat3;
 // Define paning pace in fps mode: Should be 1
 #define PANNING_PACE 1
 
-#define BOUNDS 800
+#define BOUNDS 80
 
 #endif //GPUBASEDRENDERING_A1_GLOBAL_H

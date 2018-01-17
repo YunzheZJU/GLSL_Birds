@@ -56,9 +56,9 @@ VBOBird::VBOBird(int base) {
 
     srand(static_cast<unsigned int>(time(nullptr)));
 
-    for (int i = 0; i < nVerts * 3; i++) {
-        v[i] += (i / 27) / 10.0;
-    }
+//    for (int i = 0; i < nVerts * 3; i++) {
+//        v[i] += (i / 27) / 10.0;
+//    }
 
     for (int i = 0; i < nVerts; i++) {
         int f = i / 3;  // Should be floor
@@ -68,9 +68,9 @@ VBOBird::VBOBird(int base) {
         uv[i * 2] = x;
         uv[i * 2 + 1] = y;
 
-        c[i * 3] = static_cast<float>((rand() % 10 / 10.0) * 0.8 + 0.1);
-        c[i * 3 + 1] = static_cast<float>((rand() % 10 / 10.0) * 0.8 + 0.1);
-        c[i * 3 + 2] = static_cast<float>((rand() % 10 / 10.0) * 0.8 + 0.1);
+        c[i * 3] = static_cast<float>((rand() % 100 / 100.0) * 0.8 + 0.1);
+        c[i * 3 + 1] = static_cast<float>((rand() % 100 / 100.0) * 0.8 + 0.1);
+        c[i * 3 + 2] = static_cast<float>((rand() % 100 / 100.0) * 0.8 + 0.1);
 
         n[i] = i % 9;
 

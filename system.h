@@ -44,7 +44,7 @@ void updateMVPOne();
 void updateMVPTwo();
 void updateMVPThree();
 void updateShaderMVP();
-void setupFBO();
+void setupTexture();
 void setupVAO();
 
 #endif //GPUBASEDRENDERING_A1_SYSTEM_H

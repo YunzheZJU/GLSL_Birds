@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
 //    SetUpLights();
     initVBO();
-    setupFBO();
+    setupTexture();
     setupVAO();
     setShader();
 

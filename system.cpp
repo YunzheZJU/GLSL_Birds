@@ -17,6 +17,7 @@ VBOBird *bird;
 GLuint pass1Index;
 GLuint pass2Index;
 GLuint positionTexture;
+GLuint velocityTexture;
 GLuint fsQuad;
 mat4 model;
 mat4 view;
@@ -512,7 +513,7 @@ void initVBO() {
 //    teapot = new VBOTeapot(14, glm::mat4(1.0f));
 //    torus = new VBOTorus(0.7f * 2, 0.3f * 2, 50, 50);
 //    cube = new VBOCube();
-    bird = new VBOBird(2);
+    bird = new VBOBird(32);
 }
 
 void setShader() {
@@ -590,7 +591,7 @@ void updateShaderMVP() {
     shader.setUniform("MVP", projection * mv);
 }
 
-void setupFBO() {
+void setupTexture() {
 //    // Generate and bind the framebuffer
 //    glGenFramebuffers(1, &fboHandle);
 //    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
@@ -601,16 +602,16 @@ void setupFBO() {
 
     GLfloat *positionData = new GLfloat[1024 * 4];
     for (int i = 0; i < 1024; i++) {
-        GLfloat x = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
-        GLfloat y = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
-        GLfloat z = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
+        GLfloat x = static_cast<GLfloat>(((rand() % 10000) / 10000.0) * BOUNDS - BOUNDS / 2);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         positionData[i * 4] = x;
         positionData[i * 4 + 1] = y;
         positionData[i * 4 + 2] = z;
         positionData[i * 4 + 3] = 1;
     }
 //#ifdef __APPLE__
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, positionData);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
 //#else
 //    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 32, 32);
 //#endif
