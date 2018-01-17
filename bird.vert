@@ -18,8 +18,8 @@ uniform mat4 ModelViewMatrix;
 uniform mat4 MVP;
 
 void main() {
-//    vec4 tmpPosition = texture2D(texturePosition, TextureUV);
-//    vec3 pos = tmpPosition.xyz;
+    vec4 tmpPosition = texture2D(texturePosition, TextureUV);
+    vec3 pos = tmpPosition.xyz;
 //    vec3 velocity = normalize(texture2D(textureVelocity, TextureUV).xyz);
 
     vec3 newPosition = VertexPosition;
@@ -55,7 +55,7 @@ void main() {
 //    );
 //
 //    newPosition = maty * matz * newPosition;
-//    newPosition += pos;
+    newPosition += pos;
 
     Color = vec4(VertexColor, 1.0);
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);

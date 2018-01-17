@@ -13,10 +13,10 @@ Shader shader = Shader();
 //VBOTorus *torus;
 VBOCube *cube;
 VBOBird *bird;
-GLuint fboHandle;
+//GLuint fboHandle;
 GLuint pass1Index;
 GLuint pass2Index;
-GLuint renderTex;
+GLuint positionTexture;
 GLuint fsQuad;
 mat4 model;
 mat4 view;
@@ -74,6 +74,8 @@ void Redraw() {
     } else {
         glDisable(GL_MULTISAMPLE_ARB);
     }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
 //    angle += 0.5f;
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
@@ -89,7 +91,7 @@ void Redraw() {
 //    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 //    // Render filter Image
 //    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, renderTex);
+//    glBindTexture(GL_TEXTURE_2D, positionTexture);
 //
 //    glDisable(GL_DEPTH_TEST);
 //    glClear(GL_COLOR_BUFFER_BIT);
@@ -589,48 +591,59 @@ void updateShaderMVP() {
 }
 
 void setupFBO() {
-    // Generate and bind the framebuffer
-    glGenFramebuffers(1, &fboHandle);
-    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+//    // Generate and bind the framebuffer
+//    glGenFramebuffers(1, &fboHandle);
+//    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
 
     // Create the texture object
-    glGenTextures(1, &renderTex);
-    glBindTexture(GL_TEXTURE_2D, renderTex);
-#ifdef __APPLE__
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 512, 512, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-#else
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 1280, 720);
-#endif
+    glGenTextures(1, &positionTexture);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
+
+    GLfloat *positionData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
+        GLfloat y = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
+        GLfloat z = static_cast<GLfloat>(rand() % 10 / 10.0 * BOUNDS - BOUNDS / 2);
+        positionData[i * 4] = x;
+        positionData[i * 4 + 1] = y;
+        positionData[i * 4 + 2] = z;
+        positionData[i * 4 + 3] = 1;
+    }
+//#ifdef __APPLE__
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 32, 32, 0, GL_RGBA, GL_UNSIGNED_BYTE, positionData);
+//#else
+//    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 32, 32);
+//#endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTex, 0);
+//    // Bind the texture to the FBO
+//    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture, 0);
+//
+//    // Create the depth buffer
+//    GLuint depthBuf;
+//    glGenRenderbuffers(1, &depthBuf);
+//    glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
+//    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 32, 32);
+//
+//    // Bind the depth buffer to the FBO
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+//                              GL_RENDERBUFFER, depthBuf);
+//
+//    // Set the targets for the fragment output variables
+//    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
+//    glDrawBuffers(1, drawBuffers);
+//
+//    GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+//    if (result == GL_FRAMEBUFFER_COMPLETE) {
+//        cout << "Framebuffer is complete" << endl;
+//    } else {
+//        cout << "Framebuffer error: " << result << endl;
+//    }
 
-    // Create the depth buffer
-    GLuint depthBuf;
-    glGenRenderbuffers(1, &depthBuf);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthBuf);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, 1280, 720);
-
-    // Bind the depth buffer to the FBO
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                              GL_RENDERBUFFER, depthBuf);
-
-    // Set the targets for the fragment output variables
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, drawBuffers);
-
-    GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (result == GL_FRAMEBUFFER_COMPLETE) {
-        cout << "Framebuffer is complete" << endl;
-    } else {
-        cout << "Framebuffer error: " << result << endl;
-    }
-
-    // Unbind the framebuffer, and revert to default framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//    // Unbind the framebuffer, and revert to default framebuffer
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void setupVAO() {
