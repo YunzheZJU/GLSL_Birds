@@ -26,7 +26,7 @@ bool bfocus = true;                            // Status of window focus
 int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
-int mouse[2] = {1000, 1000};
+float mouse[2] = {1000.0f, 1000.0f};
 int time_0 = clock();
 int time_1;
 float delta;
@@ -87,13 +87,13 @@ void Redraw() {
 void ProcessMouseClick(int button, int state, int x, int y) {
     if (state == GLUT_DOWN) {
         cout << "Mouse button pressed." << endl;
-        mouse[X] = static_cast<int>((x - window[W] / 2) * 1.0 / (window[W] / 2));
-        mouse[Y] = static_cast<int>((y - window[H] / 2) * 1.0 / (window[H] / 2));
     }
 }
 
-void ProcessMouseMove(int x, int y) {
-//    cout << "Mouse moves to (" << x << ", " << y << ")" << endl;
+void ProcessMouseDrag(int x, int y) {
+    cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
+    mouse[X] = static_cast<float>((x - window[W] / 2) * 1.0 / (window[W] / 2) * 0.5);
+    mouse[Y] = static_cast<float>((window[H] / 2 - y) * 1.0 / (window[H] / 2) * 0.5);
 }
 
 void ProcessFocus(int state) {
@@ -447,17 +447,18 @@ void updateBirdShaderUniform() {
 void updateComputeShaderUniform() {
     time_1 = clock();
     delta = static_cast<float>((time_1 - time_0) / 1000.0);
-    if (delta > 1) {
-        delta = 1;
-    }
+    if (delta > 1) delta = 1;
     time_0 = time_1;
     computeShader.setUniform("delta", delta);
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
-    predator = vec3(mouse[X] * 0.5, mouse[Y] * 0.5, 0);
+    if (mouse[X] != 1000.0f) {
+        cout << "Predator at (" << mouse[X] << ", " << mouse[Y] << ", 0)." << endl;
+    }
+    predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
-    mouse[X] = mouse[Y] = 1000;
+    mouse[X] = mouse[Y] = 1000.0f;
     model = mat4(1.0f);
     view = mat4(1.0f);
     projection = mat4(1.0f);
@@ -485,9 +486,6 @@ void setupTexture() {
         positionData[i * 4] = x;
         positionData[i * 4 + 1] = y;
         positionData[i * 4 + 2] = z;
-//        positionData[i * 4] = i - 512;
-//        positionData[i * 4 + 1] = i - 512;
-//        positionData[i * 4 + 2] = i - 512;
         positionData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
