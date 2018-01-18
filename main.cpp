@@ -6,8 +6,8 @@ int main(int argc, char *argv[]) {
     glutInitWindowSize(1280, 720);
     int windowHandle = glutCreateWindow("GPU Based Rendering: A1");
 
-    // Set the background color - dark grey
-    glClearColor(0.2, 0.2, 0.2, 0.0);
+    // Set the background color - white
+    glClearColor(1.0, 1.0, 1.0, 1.0);
 //    glColor3f(0.1, 0.3, 0.8);
 
     glutDisplayFunc(Redraw);
@@ -30,10 +30,12 @@ int main(int argc, char *argv[]) {
     }
 
     try {
-        shader.compileShader("bird.vert");
-        shader.compileShader("bird.frag");
-        shader.link();
-        shader.use();
+        birdShader.compileShader("bird.vert");
+        birdShader.compileShader("bird.frag");
+        birdShader.link();
+        computeShader.compileShader("compute.vert");
+        computeShader.compileShader("compute.frag");
+        computeShader.link();
     } catch (GLSLProgramException &e) {
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);

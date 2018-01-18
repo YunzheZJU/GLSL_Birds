@@ -7,7 +7,8 @@
 #include "system.h"
 #include "glutils.h"
 
-Shader shader = Shader();
+Shader birdShader = Shader();
+Shader computeShader = Shader();
 //VBOPlane *plane;
 //VBOTeapot *teapot;
 //VBOTorus *torus;
@@ -19,6 +20,8 @@ GLuint pass2Index;
 GLuint positionTexture;
 GLuint velocityTexture;
 GLuint fsQuad;
+GLuint positionComputer;
+GLuint velocityComputer;
 mat4 model;
 mat4 view;
 mat4 projection;
@@ -26,7 +29,7 @@ GLfloat camera[3] = {1, 2, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
-bool bShader = true;                       // Switch of shader
+bool bShader = true;                       // Switch of birdShader
 GLfloat camera_locator[3] = {0, -5, 10};            // Position of shadow of camera
 bool bcamera = true;                        // Switch of camera/target control
 bool bfocus = true;                            // Status of window focus
@@ -49,8 +52,8 @@ void Reshape(int width, int height) {
     glViewport(static_cast<GLint>(width / 2.0 - 640), static_cast<GLint>(height / 2.0 - 360), 1280, 720);
     window[W] = width;
     window[H] = height;
-    shader.setUniform("Width", window[W]);
-    shader.setUniform("Height", window[H]);
+    birdShader.setUniform("Width", window[W]);
+    birdShader.setUniform("Height", window[H]);
     updateWindowcenter(window, windowcenter);
 
     glMatrixMode(GL_PROJECTION);            // Select The Projection Matrix
@@ -60,7 +63,7 @@ void Reshape(int width, int height) {
 }
 
 void Redraw() {
-    shader.use();
+    birdShader.use();
 //    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
     // Render scene
     glViewport(static_cast<GLint>(window[W] / 2.0 - 640), static_cast<GLint>(window[H] / 2.0 - 360), 1280, 720);
@@ -110,7 +113,7 @@ void Redraw() {
 //    glDrawArrays(GL_TRIANGLES, 0, 6);
 //    glBindVertexArray(0);
 
-    shader.disable();
+    birdShader.disable();
 //    // Draw crosshair and locator in fps mode, or target when in observing mode(fpsmode == 0).
 //    if (fpsmode == 0) {
 //        glDisable(GL_DEPTH_TEST);
@@ -519,18 +522,18 @@ void initVBO() {
 }
 
 void setShader() {
-//    GLuint shaderProgram = shader.getProgram();
-//    pass1Index = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "pass1");
-//    pass2Index = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "pass2");
+    GLuint shaderProgram = computeShader.getProgram();
+    positionComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "position");
+    velocityComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "velocity");
 
-//    shader.setUniform("Ka", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Kd", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Ks", 0.8f, 0.8f, 0.8f);
-//    shader.setUniform("Shininess", 100.0f);
-//    shader.setUniform("EdgeThreshold", 0.05f);
-//    shader.setUniform("Width", window[W]);
-//    shader.setUniform("Height", window[H]);
-//    shader.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
+//    birdShader.setUniform("Ka", 0.9f, 0.5f, 0.3f);
+//    birdShader.setUniform("Kd", 0.9f, 0.5f, 0.3f);
+//    birdShader.setUniform("Ks", 0.8f, 0.8f, 0.8f);
+//    birdShader.setUniform("Shininess", 100.0f);
+//    birdShader.setUniform("EdgeThreshold", 0.05f);
+//    birdShader.setUniform("Width", window[W]);
+//    birdShader.setUniform("Height", window[H]);
+//    birdShader.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
 
     updateShaderMVP();
 }
@@ -539,7 +542,7 @@ void updateMVPZero() {
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, 1.7778f, 0.1f, 30000.0f);
-//    shader.setUniform("Light.Position", view * vec4(0.0f, 0.0f, 10.0f, 1.0f));
+//    birdShader.setUniform("Light.Position", view * vec4(0.0f, 0.0f, 10.0f, 1.0f));
 }
 
 void updateMVPOne() {
@@ -548,10 +551,10 @@ void updateMVPOne() {
 //    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
 //    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
 
-//    shader.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
-//    shader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-//    shader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-//    shader.setUniform("Material.Shininess", 100.0f);
+//    birdShader.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
+//    birdShader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
+//    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
+//    birdShader.setUniform("Material.Shininess", 100.0f);
 
     updateShaderMVP();
 }
@@ -562,10 +565,10 @@ void updateMVPTwo() {
 //    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
 //    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
 
-    shader.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
-    shader.setUniform("Material.Ks", 0.0f, 0.0f, 0.0f);
-    shader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    shader.setUniform("Material.Shininess", 1.0f);
+    birdShader.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
+    birdShader.setUniform("Material.Ks", 0.0f, 0.0f, 0.0f);
+    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
+    birdShader.setUniform("Material.Shininess", 1.0f);
 
     updateShaderMVP();
 }
@@ -576,21 +579,21 @@ void updateMVPThree() {
     model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
     model = glm::rotate(model, glm::radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
 
-    shader.setUniform("Material.Kd", 0.9f, 0.5f, 0.2f);
-    shader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-    shader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    shader.setUniform("Material.Shininess", 100.0f);
+    birdShader.setUniform("Material.Kd", 0.9f, 0.5f, 0.2f);
+    birdShader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
+    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
+    birdShader.setUniform("Material.Shininess", 100.0f);
 
     updateShaderMVP();
 }
 
 void updateShaderMVP() {
     mat4 mv = view * model;
-    shader.setUniform("ModelMatrix", model);
-    shader.setUniform("ViewMatrix", view);
-    shader.setUniform("ProjectionMatrix", projection);
-    shader.setUniform("ModelViewMatrix", mv);
-    shader.setUniform("MVP", projection * mv);
+    birdShader.setUniform("ModelMatrix", model);
+    birdShader.setUniform("ViewMatrix", view);
+    birdShader.setUniform("ProjectionMatrix", projection);
+    birdShader.setUniform("ModelViewMatrix", mv);
+    birdShader.setUniform("MVP", projection * mv);
 }
 
 void setupTexture() {

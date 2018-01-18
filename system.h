@@ -24,7 +24,8 @@
 using namespace std;
 
 //extern GLuint vaoHandle;
-extern Shader shader;
+extern Shader birdShader;
+extern Shader computeShader;
 //extern VBOTorus *torus;
 
 void Idle();

@@ -32,7 +32,7 @@ namespace GLSLShaderInfo {
 //    cout << "Creating program..." << endl;
 //    shaderProgram = glCreateProgram();
 //    if (shaderProgram == 0) {
-//        cerr << "Error occurred when creating shader program." << endl;
+//        cerr << "Error occurred when creating birdShader program." << endl;
 //        exit(1);
 //    } else {
 //        cout << "Creating program...OK" << endl;
@@ -56,14 +56,14 @@ namespace GLSLShaderInfo {
 //        cout << "Creating shaders...OK" << endl;
 //    }
 //
-//    cout << "Reading shader source files..." << endl;
+//    cout << "Reading birdShader source files..." << endl;
 //    vertexShaderString = textFileRead(vertexShaderFile);
 //    fragmentShaderString = textFileRead(fragmentShaderFile);
 //    if (vertexShaderString == nullptr || fragmentShaderString == nullptr) {
-//        cerr << "Error occurred when reading shader source files." << endl;
+//        cerr << "Error occurred when reading birdShader source files." << endl;
 //        exit(1);
 //    } else {
-//        cout << "Reading shader source files...OK" << endl;
+//        cout << "Reading birdShader source files...OK" << endl;
 //    }
 //
 //    const char *vv = vertexShaderString;
@@ -84,19 +84,19 @@ namespace GLSLShaderInfo {
 //    GLint fragmentShaderCompileResult;
 //    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexShaderCompileResult);
 //    if (vertexShaderCompileResult == GL_FALSE) {
-//        cerr << "Fail to compile vertex shader." << endl;
+//        cerr << "Fail to compile vertex birdShader." << endl;
 //        logShader(vertexShader);
 //        exit(1);
 //    } else {
-//        cout << "Compiling vertex shader...OK" << endl;
+//        cout << "Compiling vertex birdShader...OK" << endl;
 //    }
 //    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragmentShaderCompileResult);
 //    if (fragmentShaderCompileResult == GL_FALSE) {
-//        cerr << "Fail to compile fragment shader." << endl;
+//        cerr << "Fail to compile fragment birdShader." << endl;
 //        logShader(fragmentShader);
 //        exit(1);
 //    } else {
-//        cout << "Compiling fragment shader...OK" << endl;
+//        cout << "Compiling fragment birdShader...OK" << endl;
 //    }
 //
 //    cout << "Attaching..." << endl;
@@ -109,7 +109,7 @@ namespace GLSLShaderInfo {
 //    GLint linkStatus;
 //    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &linkStatus);
 //    if (linkStatus == GL_FALSE) {
-//        cerr << "Fail to link shader program." << endl;
+//        cerr << "Fail to link birdShader program." << endl;
 //        logProgram();
 //        exit(1);
 //    } else {
@@ -126,13 +126,13 @@ namespace GLSLShaderInfo {
 //    glUseProgram(0);
 //}
 //
-//void Shader::logShader(GLuint shader) {
+//void Shader::logShader(GLuint birdShader) {
 //    GLint logLength;
-//    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
+//    glGetShaderiv(birdShader, GL_INFO_LOG_LENGTH, &logLength);
 //    if (logLength > 0) {
 //        auto *logBuffer = (char *) malloc(static_cast<size_t>(logLength));
 //        GLsizei written;
-//        glGetShaderInfoLog(shader, logLength, &written, logBuffer);
+//        glGetShaderInfoLog(birdShader, logLength, &written, logBuffer);
 //        cerr << "Shader log: \n" << logBuffer << endl;
 //        free(logBuffer);
 //    }
@@ -192,7 +192,7 @@ Shader::~Shader() {
     GLint numShaders = 0;
     glGetProgramiv(shaderProgram, GL_ATTACHED_SHADERS, &numShaders);
 
-    // Get the shader names
+    // Get the birdShader names
     GLuint *shaderNames = new GLuint[numShaders];
     glGetAttachedShaders(shaderProgram, numShaders, nullptr, shaderNames);
 
@@ -210,7 +210,7 @@ void Shader::compileShader(const char *fileName)
 throw(GLSLProgramException) {
     int numExts = sizeof(GLSLShaderInfo::extensions) / sizeof(GLSLShaderInfo::shader_file_extension);
 
-    // Check the file name's extension to determine the shader type
+    // Check the file name's extension to determine the birdShader type
     string ext = getExtension(fileName);
     GLSLShader::GLSLShaderType type = GLSLShader::VERTEX;
     bool matchFound = false;
@@ -228,7 +228,7 @@ throw(GLSLProgramException) {
         throw GLSLProgramException(msg);
     }
 
-    // Pass the discovered shader type along
+    // Pass the discovered birdShader type along
     compileShader(fileName, type);
 }
 
@@ -253,7 +253,7 @@ throw(GLSLProgramException) {
     if (shaderProgram <= 0) {
         shaderProgram = glCreateProgram();
         if (shaderProgram == 0) {
-            throw GLSLProgramException("Unable to create shader program.");
+            throw GLSLProgramException("Unable to create birdShader program.");
         }
     }
 
@@ -278,7 +278,7 @@ throw(GLSLProgramException) {
     if (shaderProgram <= 0) {
         shaderProgram = glCreateProgram();
         if (shaderProgram == 0) {
-            throw GLSLProgramException("Unable to create shader program.");
+            throw GLSLProgramException("Unable to create birdShader program.");
         }
     }
 
@@ -287,7 +287,7 @@ throw(GLSLProgramException) {
     const char *c_code = source.c_str();
     glShaderSource(shaderHandle, 1, &c_code, nullptr);
 
-    // Compile the shader
+    // Compile the birdShader
     glCompileShader(shaderHandle);
 
     // Check for errors
@@ -307,7 +307,7 @@ throw(GLSLProgramException) {
         }
         string msg;
         if (fileName) {
-            msg = string(fileName) + ": shader compliation failed\n";
+            msg = string(fileName) + ": birdShader compliation failed\n";
         } else {
             msg = "Shader compilation failed.\n";
         }
@@ -316,7 +316,7 @@ throw(GLSLProgramException) {
         throw GLSLProgramException(msg);
 
     } else {
-        // Compile succeeded, attach shader
+        // Compile succeeded, attach birdShader
         glAttachShader(shaderProgram, shaderHandle);
     }
 }
