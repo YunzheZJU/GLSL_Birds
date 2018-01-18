@@ -24,16 +24,18 @@ int main(int argc, char *argv[]) {
         cerr << "Error occurred when initializing GLEW: " << glewGetErrorString(glewErr) << endl;
         exit(1);
     }
-    if (!glewIsSupported("GL_VERSION_4_0")) {
-        cerr << "OpenGL 4.0 is not supported" << endl;
+    if (!glewIsSupported("GL_VERSION_4_3")) {
+        cerr << "OpenGL 4.3 is not supported" << endl;
         exit(1);
     }
 
     try {
-        shader.compileShader("bird.vert");
-        shader.compileShader("bird.frag");
-        shader.link();
-        shader.use();
+        birdShader.compileShader("bird.vert");
+        birdShader.compileShader("bird.frag");
+        birdShader.link();
+        computeShader.compileShader("compute.vert");
+        computeShader.compileShader("compute.frag");
+        computeShader.link();
     } catch (GLSLProgramException &e) {
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);
@@ -45,7 +47,7 @@ int main(int argc, char *argv[]) {
     initVBO();
     setupTexture();
     setupVAO();
-    setShader();
+//    setShader();
 
     glutMainLoop();
 
