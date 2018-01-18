@@ -1,10 +1,10 @@
 #version 430
 
-uniform float delta; // about 0.016
+uniform float delta = 0.016; // about 0.016
 uniform float seperationDistance = 20; // 20
 uniform float alignmentDistance = 40; // 40
 uniform float cohesionDistance = 20; //
-uniform vec3 predator;
+uniform vec3 predator = vec3(0.0);
 
 const vec2 resolution = vec2(1280.0, 720.0);
 const float width = resolution.x;
@@ -51,6 +51,7 @@ vec4 position() {
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
+    return vec4(vec3(100.0), 1.0);
     return vec4( position + velocity * delta * 15. , phase );
 }
 
@@ -176,7 +177,8 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-    return vec4(1.0);
+    return vec4(vec3(100.0), 1.0);
+    return vec4(velocity, 1.0);
 }
 
 void main() {

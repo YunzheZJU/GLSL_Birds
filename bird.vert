@@ -55,6 +55,9 @@ void main() {
     );
 
     newPosition = maty * matz * newPosition;
+    if (length(pos) < 0.4) {
+        pos = vec3(100.5);
+    }
     newPosition += pos;
 
     Color = vec4(VertexColor, 1.0);
@@ -63,4 +66,5 @@ void main() {
 //    }
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
+//    gl_Position = MVP * vec4(VertexPosition + pos, 1.0);
 }

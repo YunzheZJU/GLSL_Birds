@@ -4,7 +4,7 @@ int main(int argc, char *argv[]) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize(1280, 720);
-    int windowHandle = glutCreateWindow("GPU Based Rendering: A1");
+    int windowHandle = glutCreateWindow("GPU Based Rendering: Project");
 
     // Set the background color - white
     glClearColor(0.2, 0.2, 0.2, 1.0);
@@ -36,6 +36,9 @@ int main(int argc, char *argv[]) {
         computeShader.compileShader("compute.vert");
         computeShader.compileShader("compute.frag");
         computeShader.link();
+//        shader.compileShader("basic.vert");
+//        shader.compileShader("basic.frag");
+//        shader.link();
     } catch (GLSLProgramException &e) {
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);
@@ -45,7 +48,7 @@ int main(int argc, char *argv[]) {
     setupTexture();
     setupFBO();
     setupVAO();
-//    setShader();
+    setShader();
 
     glutMainLoop();
 

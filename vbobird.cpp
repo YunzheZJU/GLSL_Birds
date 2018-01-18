@@ -61,7 +61,7 @@ VBOBird::VBOBird(int base) {
 //    }
 
     for (int i = 0; i < nVerts; i++) {
-        int f = i / 9;  // Should be floor, and why f = i / 3 ? No sense.
+        int f = i / 3;  // Should be floor, and why f = i / 3 ? No sense.
         auto x = static_cast<float>((f % base) * 1.0 / base);
         auto y = static_cast<float>((int) (f * 1.0 / base) * 1.0 / base);
 
