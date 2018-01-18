@@ -27,7 +27,7 @@ GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {1, 2, 350};                    // Position of camera
+GLfloat camera[3] = {1, 1, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
@@ -69,6 +69,7 @@ void Reshape(int width, int height) {
 void Redraw() {
     ///////////////Update position texture//////////////
     computeShader.use();
+    glClear(GL_COLOR_BUFFER_BIT);
     updateComputeShaderUniform();
     glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[currentTarget]);
     // Render filter Image
@@ -77,8 +78,7 @@ void Redraw() {
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
 
-    glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
+//    glDisable(GL_DEPTH_TEST);
 
     glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &positionComputer);
 
@@ -89,6 +89,7 @@ void Redraw() {
     glFlush();
     ///////////////Update velocity texture//////////////
     computeShader.use();
+    glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[currentTarget]);
     // Render filter Image
     glActiveTexture(GL_TEXTURE0);
@@ -97,7 +98,6 @@ void Redraw() {
     glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
 
     glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
 
     glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &velocityComputer);
 //    updateComputeShaderUniform();
@@ -535,10 +535,6 @@ void PrintStatus() {
 }
 
 void initVBO() {
-//    plane = new VBOPlane(50.0f, 50.0f, 1, 1);
-//    teapot = new VBOTeapot(14, glm::mat4(1.0f));
-//    torus = new VBOTorus(0.7f * 2, 0.3f * 2, 50, 50);
-//    cube = new VBOCube();
     bird = new VBOBird(32);
 }
 
@@ -546,62 +542,6 @@ void setShader() {
     GLuint shaderProgram = computeShader.getProgram();
     positionComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "position");
     velocityComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "velocity");
-
-//    shader.setUniform("Ka", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Kd", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Ks", 0.8f, 0.8f, 0.8f);
-//    shader.setUniform("Shininess", 100.0f);
-//    shader.setUniform("EdgeThreshold", 0.05f);
-//    shader.setUniform("Width", window[W]);
-//    shader.setUniform("Height", window[H]);
-//    shader.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
-
-//    updateShaderMVP();
-}
-
-void updateMVPZero() {
-//    shader.setUniform("Light.Position", view * vec4(0.0f, 0.0f, 10.0f, 1.0f));
-}
-
-void updateMVPOne() {
-//    model = glm::translate(model, vec3(-2.0f, -1.5f, 0.0f));
-//    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-//    shader.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
-//    shader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-//    shader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-//    shader.setUniform("Material.Shininess", 100.0f);
-
-    updateShaderMVP();
-}
-
-void updateMVPTwo() {
-    model = mat4(1.0f);
-    model = glm::translate(model, vec3(0.0f, -2.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-    birdShader.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
-    birdShader.setUniform("Material.Ks", 0.0f, 0.0f, 0.0f);
-    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    birdShader.setUniform("Material.Shininess", 1.0f);
-
-    updateShaderMVP();
-}
-
-void updateMVPThree() {
-    model = mat4(1.0f);
-    model = glm::translate(model, vec3(2.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-    birdShader.setUniform("Material.Kd", 0.9f, 0.5f, 0.2f);
-    birdShader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    birdShader.setUniform("Material.Shininess", 100.0f);
-
-    updateShaderMVP();
 }
 
 void updateShaderMVP() {
@@ -646,9 +586,9 @@ void setupTexture() {
             GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
             GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-            positionData[i * 4] = x;
-            positionData[i * 4 + 1] = y;
-            positionData[i * 4 + 2] = z;
+            positionData[i * 4] = i - 512;
+            positionData[i * 4 + 1] = i - 512;
+            positionData[i * 4 + 2] = i - 512;
             positionData[i * 4 + 3] = 1;
         }
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
@@ -668,9 +608,9 @@ void setupTexture() {
             GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
             GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
 
-            velocityData[i * 4] = x * 10;
-            velocityData[i * 4 + 1] = y * 10;
-            velocityData[i * 4 + 2] = z * 10;
+            velocityData[i * 4] = x;
+            velocityData[i * 4 + 1] = y;
+            velocityData[i * 4 + 2] = z;
             velocityData[i * 4 + 3] = 1;
         }
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
@@ -696,6 +636,7 @@ void setupFBO() {
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //////////////Position FBO #1: render to texture 1//////////////////
     // Bind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[1]);
@@ -705,6 +646,7 @@ void setupFBO() {
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     ///////////////Velocity FBO #0: render to texture 0////////////////////
     // Bind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[0]);
@@ -714,6 +656,7 @@ void setupFBO() {
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     ///////////////Velocity FBO #1: render to texture 1////////////////////
     // Bind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[1]);
@@ -723,6 +666,7 @@ void setupFBO() {
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     ///////////////////End////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
