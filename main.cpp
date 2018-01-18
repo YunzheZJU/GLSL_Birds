@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
 
     // Set the background color - white
     glClearColor(1.0, 1.0, 1.0, 1.0);
-//    glColor3f(0.1, 0.3, 0.8);
+    glColor3f(0.0, 0.0, 0.0);
 
     glutDisplayFunc(Redraw);
     glutReshapeFunc(Reshape);

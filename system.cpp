@@ -9,20 +9,10 @@
 
 Shader birdShader = Shader();
 Shader computeShader = Shader();
-//VBOPlane *plane;
-//VBOTeapot *teapot;
-//VBOTorus *torus;
-//VBOCube *cube;
 VBOBird *bird;
-//GLuint fboHandle;
-//GLuint pass1Index;
-//GLuint pass2Index;
 GLuint positionTexture;
 GLuint velocityTexture;
-GLuint positionComputer;
-GLuint velocityComputer;
 GLuint fboHandle;
-GLuint velocityFBO[2];
 GLuint fsQuad;
 mat4 model;
 mat4 view;
@@ -32,7 +22,6 @@ GLfloat target[3] = {0, 0, 0};                    // Position of target of camer
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
 bool bShader = true;                       // Switch of shader
-GLfloat camera_locator[3] = {0, -5, 10};            // Position of shadow of camera
 bool bcamera = true;                        // Switch of camera/target control
 bool bfocus = true;                            // Status of window focus
 bool bmouse = false;                        // Whether mouse postion should be moved
@@ -41,11 +30,9 @@ int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
 int time_0 = clock();
 int time_1;
-int currentTarget = 1;
 float delta;
 char message[70] = "Welcome!";                        // Message string to be shown
 //int focus = NONE;									// Focus object by clicking RMB
-GLfloat angle = 0.0f;
 
 void Idle() {
     glutPostRedisplay();
@@ -79,11 +66,11 @@ void Redraw() {
     computeShader.disable();
     glFlush();
     ///////////////////Draw the birds///////////////////
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    birdShader.use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_MULTISAMPLE_ARB);
     glEnable(GL_DEPTH_TEST);
-    birdShader.use();
     updateBirdShaderUniform();
     bird->render();
     birdShader.disable();
@@ -102,7 +89,6 @@ void ProcessMouseClick(int button, int state, int x, int y) {
         strcpy(message, "LMB pressed. Switch on/off multisampling anti-alias.");
         glutPostRedisplay();
     } else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && fpsmode) {
-//        processPick(window);
         bShader = !bShader;
     }
 }
@@ -330,47 +316,6 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
             }
             break;
         }
-            // 光源颜色分量
-        case 'R':
-        case 'r': {
-            cout << "R pressed." << endl;
-            currentColor[0] -= 0.1f;
-            if (currentColor[0] < 0) {
-                currentColor[0] = 1.0f;
-            }
-            break;
-        }
-        case 'G':
-        case 'g': {
-            cout << "G pressed." << endl;
-            currentColor[1] -= 0.1f;
-            if (currentColor[1] < 0) {
-                currentColor[1] = 1.0f;
-            }
-            break;
-        }
-        case 'B':
-        case 'b': {
-            cout << "B pressed." << endl;
-            currentColor[2] -= 0.1f;
-            if (currentColor[2] < 0) {
-                currentColor[2] = 1.0f;
-            }
-            break;
-        }
-            // 光源强度（衰减）
-        case '+': {
-            cout << "+ pressed." << endl;
-            constantattenuation -= 0.1f;
-            cout << constantattenuation << endl;
-            break;
-        }
-        case '-': {
-            cout << "- pressed." << endl;
-            constantattenuation += 0.1f;
-            cout << constantattenuation << endl;
-            break;
-        }
             // 屏幕截图
         case 'X':
         case 'x': {
@@ -393,14 +338,10 @@ void ProcessSpecialKey(int k, int x, int y) {
     switch (k) {
         // Up arrow
         case 101: {
-            lightPosition0[Y] += 5;
             break;
         }
             // Down arrow
         case 103: {
-            if (lightPosition0[Y] >= 10) {
-                lightPosition0[Y] -= 5;
-            }
             break;
         }
         default:
@@ -474,7 +415,7 @@ void PrintStatus() {
 }
 
 void initVBO() {
-    bird = new VBOBird(16);
+    bird = new VBOBird(32);
 }
 
 void setShader() {
@@ -486,6 +427,7 @@ void updateBirdShaderUniform() {
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, 1.7778f, 0.1f, 30000.0f);
     model = mat4(1.0f);
+    model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
     mat4 mv = view * model;
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
@@ -496,7 +438,7 @@ void updateBirdShaderUniform() {
 
 void updateComputeShaderUniform() {
     time_1 = clock();
-    delta = (time_1 - time_0) / 1000.0;
+    delta = static_cast<float>((time_1 - time_0) / 1000.0);
     if (delta > 1) {
         delta = 1;
     }
@@ -530,9 +472,12 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-        positionData[i * 4] = i - 512;
-        positionData[i * 4 + 1] = i - 512;
-        positionData[i * 4 + 2] = i - 512;
+        positionData[i * 4] = x;
+        positionData[i * 4 + 1] = y;
+        positionData[i * 4 + 2] = z;
+//        positionData[i * 4] = i - 512;
+//        positionData[i * 4 + 1] = i - 512;
+//        positionData[i * 4 + 2] = i - 512;
         positionData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
@@ -553,8 +498,8 @@ void setupTexture() {
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
 
         velocityData[i * 4] = x;
-        velocityData[i * 4 + 1] = x;
-        velocityData[i * 4 + 2] = x;
+        velocityData[i * 4 + 1] = y;
+        velocityData[i * 4 + 2] = z;
         velocityData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
