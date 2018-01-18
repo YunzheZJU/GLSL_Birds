@@ -1,11 +1,9 @@
 #version 430
 
-uniform float time;
 uniform float delta; // about 0.016
 uniform float seperationDistance = 20; // 20
 uniform float alignmentDistance = 40; // 40
 uniform float cohesionDistance = 20; //
-uniform float freedomFactor;
 uniform vec3 predator;
 
 const vec2 resolution = vec2(1280.0, 720.0);
@@ -183,5 +181,4 @@ vec4 velocity() {
 
 void main() {
 	FragColor = ComputerPass();
-
 }

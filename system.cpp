@@ -19,6 +19,8 @@ VBOBird *bird;
 //GLuint pass2Index;
 GLuint positionTexture[2];
 GLuint velocityTexture[2];
+GLuint positionComputer;
+GLuint velocityComputer;
 GLuint positionFBO;
 GLuint velocityFBO;
 GLuint fsQuad;
@@ -37,6 +39,9 @@ bool bmouse = false;                        // Whether mouse postion should be m
 int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
+int time_0 = clock();
+int time_1;
+float delta;
 char message[70] = "Welcome!";                        // Message string to be shown
 //int focus = NONE;									// Focus object by clicking RMB
 GLfloat angle = 0.0f;
@@ -61,24 +66,65 @@ void Reshape(int width, int height) {
 }
 
 void Redraw() {
+    ///////////////Update position texture//////////////
+    computeShader.use();
+    updateComputeShaderUniform();
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+    // Render filter Image
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
+
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &positionComputer);
+
+    // Render the full-screen quad
+    glBindVertexArray(fsQuad);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glFlush();
+    ///////////////Update velocity texture//////////////
+    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO);
+    // Render filter Image
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
+
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &velocityComputer);
+//    updateComputeShaderUniform();
+
+    // Render the full-screen quad
+    glBindVertexArray(fsQuad);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+    glFlush();
+    computeShader.disable();
+    ///////////////////Draw the birds///////////////////
     birdShader.use();
-//    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // Render scene
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//    glLoadIdentity();                        // Reset The Current Modelview Matrix
-//    // 必须定义，以在固定管线中绘制物体
-//    gluLookAt(camera[X], camera[Y], camera[Z],
-//              target[X], target[Y], target[Z],
-//              0, 1, 0);                            // Define the view matrix
+    glLoadIdentity();                        // Reset The Current Modelview Matrix
+    // 必须定义，以在固定管线中绘制物体
+    gluLookAt(camera[X], camera[Y], camera[Z],
+              target[X], target[Y], target[Z],
+              0, 1, 0);                            // Define the view matrix
 //    if (bMsaa) {
-        glEnable(GL_MULTISAMPLE_ARB);
+    glEnable(GL_MULTISAMPLE_ARB);
 //    } else {
 //        glDisable(GL_MULTISAMPLE_ARB);
 //    }
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
 //    angle += 0.5f;
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
@@ -88,46 +134,21 @@ void Redraw() {
     bird->render();
 //    DrawScene();
 
-//    glFlush();
-//    //////////////////////////////////////
-//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//    // Render filter Image
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, positionTexture);
-//
-//    glDisable(GL_DEPTH_TEST);
-//    glClear(GL_COLOR_BUFFER_BIT);
-//
-//    glUniformSubroutinesuiv( GL_FRAGMENT_SHADER, 1, &pass2Index);
-//    model = mat4(1.0f);
-//    view = mat4(1.0f);
-//    projection = mat4(1.0f);
-//    updateShaderMVP();
-//
-//    // Render the full-screen quad
-//    glBindVertexArray(fsQuad);
-//    glDrawArrays(GL_TRIANGLES, 0, 6);
-//    glBindVertexArray(0);
-
-    birdShader.disable();
-//    // Draw crosshair and locator in fps mode, or target when in observing mode(fpsmode == 0).
-//    if (fpsmode == 0) {
-//        glDisable(GL_DEPTH_TEST);
-//        drawLocator(target, LOCATOR_SIZE);
-//        glEnable(GL_DEPTH_TEST);
-//    } else {
-//        drawCrosshair();
-//        camera_locator[X] = camera[X];
-//        camera_locator[Z] = camera[Z];
-//        glDisable(GL_DEPTH_TEST);
-//        drawLocator(camera_locator, LOCATOR_SIZE);
-//        glEnable(GL_DEPTH_TEST);
-//    }
-//    // Draw lights
-//    drawLocator(lightPosition0, LOCATOR_SIZE);
     // Show fps, message and other information
     PrintStatus();
+    birdShader.disable();
+
+    //////////////////////End////////////////////////
     glutSwapBuffers();
+
+    // Swap the textures
+    GLuint temp = positionTexture[1];
+    positionTexture[1] = positionTexture[0];
+    positionTexture[0] = temp;
+    temp = velocityTexture[1];
+    velocityTexture[1] = velocityTexture[0];
+    velocityTexture[0] = temp;
+
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
 }
 
@@ -518,9 +539,9 @@ void initVBO() {
 }
 
 void setShader() {
-//    GLuint shaderProgram = shader.getProgram();
-//    pass1Index = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "pass1");
-//    pass2Index = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "pass2");
+    GLuint shaderProgram = computeShader.getProgram();
+    positionComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "position");
+    velocityComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "velocity");
 
 //    shader.setUniform("Ka", 0.9f, 0.5f, 0.3f);
 //    shader.setUniform("Kd", 0.9f, 0.5f, 0.3f);
@@ -593,6 +614,20 @@ void updateShaderMVP() {
     birdShader.setUniform("MVP", projection * mv);
 }
 
+void updateComputeShaderUniform() {
+    time_1 = clock();
+    delta = (time_1 - time_0) / 1000.0;
+    if (delta > 1) {
+        delta = 1;
+    }
+    time_0 = time_1;
+    computeShader.setUniform("seperationDistance", 20.0f);
+    computeShader.setUniform("alignmentDistance", 40.0f);
+    computeShader.setUniform("cohesionDistance", 20.0f);
+    computeShader.setUniform("predator", vec3(0, 0, 0));
+    computeShader.setUniform("delta", delta);
+}
+
 void setupTexture() {
     glGenTextures(2, positionTexture);
     glGenTextures(2, velocityTexture);
@@ -646,7 +681,7 @@ void setupTexture() {
 
 void setupFBO() {
     GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-//////////////Position FBO//////////////////
+    //////////////Position FBO//////////////////
     // Generate and bind the framebuffer
     glGenFramebuffers(1, &positionFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
@@ -656,17 +691,17 @@ void setupFBO() {
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
-///////////////Velocity FBO////////////////////
+    ///////////////Velocity FBO////////////////////
     // Generate and bind the framebuffer
-    glGenFramebuffers(1, &positionFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+    glGenFramebuffers(1, &velocityFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO);
 
     // Bind the texture to the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[1], 0);
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
-///////////////////End////////////////////////
+    ///////////////////End////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
         cout << "Framebuffer is complete" << endl;

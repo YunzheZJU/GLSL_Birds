@@ -45,6 +45,7 @@ void updateMVPOne();
 void updateMVPTwo();
 void updateMVPThree();
 void updateShaderMVP();
+void updateComputeShaderUniform();
 void setupTexture();
 void setupFBO();
 void setupVAO();

@@ -10,7 +10,7 @@
 #include <iostream>
 #include <iomanip>
 #include <Windows.h>
-#include <time.h>
+#include <ctime>
 
 // Include glew and glut
 #include <glew.h>
