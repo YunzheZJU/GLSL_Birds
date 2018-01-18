@@ -109,7 +109,7 @@ void Redraw() {
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
     // Draw something here
-    updateShaderMVP();
+    updateBirdShaderUniform();
 //    cube->render();
     bird->render();
 //    DrawScene();
@@ -120,14 +120,6 @@ void Redraw() {
 
     //////////////////////End////////////////////////
     glutSwapBuffers();
-
-//    // Swap the textures
-//    GLuint temp = positionTexture[1];
-//    positionTexture[1] = positionTexture[0];
-//    positionTexture[0] = temp;
-//    temp = velocityTexture[1];
-//    velocityTexture[1] = velocityTexture[0];
-//    velocityTexture[0] = temp;
 
     currentTarget = 1 - currentTarget;
 
@@ -519,7 +511,7 @@ void initVBO() {
 void setShader() {
 }
 
-void updateShaderMVP() {
+void updateBirdShaderUniform() {
     birdShader.use();
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
@@ -540,11 +532,20 @@ void updateComputeShaderUniform() {
         delta = 1;
     }
     time_0 = time_1;
+    computeShader.setUniform("delta", delta);
     computeShader.setUniform("seperationDistance", 20.0f);
     computeShader.setUniform("alignmentDistance", 40.0f);
     computeShader.setUniform("cohesionDistance", 20.0f);
     computeShader.setUniform("predator", vec3(0, 0, 0));
-    computeShader.setUniform("delta", delta);
+    model = mat4(1.0f);
+    view = mat4(1.0f);
+    projection = mat4(1.0f);
+    mat4 mv = view * model;
+    computeShader.setUniform("ModelMatrix", model);
+    computeShader.setUniform("ViewMatrix", view);
+    computeShader.setUniform("ProjectionMatrix", projection);
+    computeShader.setUniform("ModelViewMatrix", mv);
+    computeShader.setUniform("MVP", projection * mv);
 }
 
 void setupTexture() {
@@ -560,9 +561,9 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-        positionData[i * 4] = i - 512;
-        positionData[i * 4 + 1] = i - 512;
-        positionData[i * 4 + 2] = i - 512;
+        positionData[i * 4] = x;
+        positionData[i * 4 + 1] = y;
+        positionData[i * 4 + 2] = z;
         positionData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
@@ -582,9 +583,9 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
 
-        velocityData[i * 4] = 1;
-        velocityData[i * 4 + 1] = 1;
-        velocityData[i * 4 + 2] = 1;
+        velocityData[i * 4] = x;
+        velocityData[i * 4 + 1] = y;
+        velocityData[i * 4 + 2] = z;
         velocityData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);

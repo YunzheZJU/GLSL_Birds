@@ -1,12 +1,16 @@
 #version 430
 
+in vec3 Position;
+in vec3 Normal;
+in vec2 TexCoord;
+
 uniform float delta; // about 0.016
 uniform float seperationDistance = 20; // 20
 uniform float alignmentDistance = 40; // 40
 uniform float cohesionDistance = 20; //
 uniform vec3 predator;
 
-const vec2 resolution = vec2(1280.0, 720.0);
+const vec2 resolution = vec2(32.0, 32.0);
 const float width = resolution.x;
 const float height = resolution.y;
 
@@ -48,9 +52,14 @@ vec4 position() {
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
-//    return vec4(1.0);
-    return vec4( position + 1000 , phase );
-//    return vec4( position + velocity * delta * 15. , phase );
+//    return vec4(100.0);
+//if (gl_FragCoord.y > 31.5) {
+//    return vec4( 100.0, 0.0, 0.0, 1.0 );
+//} else {
+//    return vec4( -100.0, 0.0, 0.0, 1.0 );
+//}
+//return vec4(position, phase);
+    return vec4( position + velocity * delta * 15. , phase );
 }
 
 // Compute velocity
@@ -174,7 +183,9 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-    return vec4(velocity, 1.0);
+    return vec4(1.0);
+//    return vec4(selfVelocity, 1.0);
+//    return vec4(velocity, 1.0);
 }
 
 void main() {

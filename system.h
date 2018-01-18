@@ -45,7 +45,7 @@ void updateMVPZero();
 void updateMVPOne();
 void updateMVPTwo();
 void updateMVPThree();
-void updateShaderMVP();
+void updateBirdShaderUniform();
 void updateComputeShaderUniform();
 void setupTexture();
 void setupFBO();
