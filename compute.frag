@@ -50,7 +50,9 @@ vec4 position() {
     phase = mod( ( phase + delta +
         length( velocity.xz ) * delta * 3. +
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
-
+    if (length(velocity) < 0.2) {
+        return vec4(100.0, 100.0, 100.0, 1.0);
+    }
     // position + velocity即可，恒定帧率下delta无影响，15是系数
     return vec4( position + velocity * delta * 15 , phase );
 }
@@ -176,7 +178,7 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-    return vec4(1.0);
+    return vec4(100.0, 100.0, 100.0, 1.0);
 //    return vec4(selfVelocity, 1.0);
 //    return vec4(velocity, 1.0);
 }

@@ -67,61 +67,30 @@ void Reshape(int width, int height) {
 }
 
 void Redraw() {
-    ///////////////Update position texture//////////////
+    ///////////////Update texture//////////////
     glClear(GL_COLOR_BUFFER_BIT);
     glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
-    // Render filter Image
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture);
-
     glDisable(GL_DEPTH_TEST);
-
     computeShader.use();
     updateComputeShaderUniform();
-    // Render the full-screen quad
     glBindVertexArray(fsQuad);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
     computeShader.disable();
     glFlush();
     ///////////////////Draw the birds///////////////////
-    birdShader.use();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // Render scene
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();                        // Reset The Current Modelview Matrix
-    // 必须定义，以在固定管线中绘制物体
-    gluLookAt(camera[X], camera[Y], camera[Z],
-              target[X], target[Y], target[Z],
-              0, 1, 0);                            // Define the view matrix
-//    if (bMsaa) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glEnable(GL_MULTISAMPLE_ARB);
-//    } else {
-//        glDisable(GL_MULTISAMPLE_ARB);
-//    }
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture);
-//    angle += 0.5f;
-//    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
-    // Draw something here
+    birdShader.use();
     updateBirdShaderUniform();
-//    cube->render();
     bird->render();
-//    DrawScene();
-
     birdShader.disable();
+    //////////////////////End////////////////////////
     // Show fps, message and other information
     PrintStatus();
-
-    //////////////////////End////////////////////////
     glutSwapBuffers();
-
-    currentTarget = 1 - currentTarget;
 
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
 }
@@ -583,9 +552,9 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
 
-        velocityData[i * 4] = 1;
-        velocityData[i * 4 + 1] = 1;
-        velocityData[i * 4 + 2] = 1;
+        velocityData[i * 4] = x;
+        velocityData[i * 4 + 1] = x;
+        velocityData[i * 4 + 2] = x;
         velocityData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
@@ -595,6 +564,12 @@ void setupTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    ///////////////////////////////////////////
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 }
 
 void setupFBO() {

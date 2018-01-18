@@ -58,7 +58,7 @@ void main() {
     newPosition += pos;
 
     Color = vec4(VertexColor, 1.0);
-//    if (pos.z < 0.2) {
+//    if (length(velocity) < 0.2) {
 //        Color = vec4(1.0, 0.0, 0.0, 1.0);
 //    }
 
