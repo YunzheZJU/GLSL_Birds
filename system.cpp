@@ -17,11 +17,11 @@ VBOBird *bird;
 //GLuint fboHandle;
 //GLuint pass1Index;
 //GLuint pass2Index;
-GLuint positionTexture[2];
-GLuint velocityTexture[2];
+GLuint positionTexture;
+GLuint velocityTexture;
 GLuint positionComputer;
 GLuint velocityComputer;
-GLuint positionFBO[2];
+GLuint fboHandle;
 GLuint velocityFBO[2];
 GLuint fsQuad;
 mat4 model;
@@ -68,46 +68,24 @@ void Reshape(int width, int height) {
 
 void Redraw() {
     ///////////////Update position texture//////////////
-    computeShader.use();
     glClear(GL_COLOR_BUFFER_BIT);
-    updateComputeShaderUniform();
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[currentTarget]);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
     // Render filter Image
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
-
-//    glDisable(GL_DEPTH_TEST);
-
-    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &positionComputer);
-
-    // Render the full-screen quad
-    glBindVertexArray(fsQuad);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-    glFlush();
-    ///////////////Update velocity texture//////////////
-    computeShader.use();
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[currentTarget]);
-    // Render filter Image
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 
     glDisable(GL_DEPTH_TEST);
 
-    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &velocityComputer);
-//    updateComputeShaderUniform();
-
+    computeShader.use();
+    updateComputeShaderUniform();
     // Render the full-screen quad
     glBindVertexArray(fsQuad);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glFlush();
     computeShader.disable();
+    glFlush();
     ///////////////////Draw the birds///////////////////
     birdShader.use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -124,9 +102,9 @@ void Redraw() {
 //        glDisable(GL_MULTISAMPLE_ARB);
 //    }
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 //    angle += 0.5f;
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
@@ -539,9 +517,6 @@ void initVBO() {
 }
 
 void setShader() {
-    GLuint shaderProgram = computeShader.getProgram();
-    positionComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "position");
-    velocityComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "velocity");
 }
 
 void updateShaderMVP() {
@@ -573,101 +548,69 @@ void updateComputeShaderUniform() {
 }
 
 void setupTexture() {
-    glGenTextures(2, positionTexture);
-    glGenTextures(2, velocityTexture);
+    glGenTextures(1, &positionTexture);
+    glGenTextures(1, &velocityTexture);
 
-    for (int num = 0; num < 2; num++) {
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, positionTexture[num]);
+    // Create the position texture
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
 
-        GLfloat *positionData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+    GLfloat *positionData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-            positionData[i * 4] = i - 512;
-            positionData[i * 4 + 1] = i - 512;
-            positionData[i * 4 + 2] = i - 512;
-            positionData[i * 4 + 3] = 1;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, velocityTexture[num]);
-
-        GLfloat *velocityData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-
-            velocityData[i * 4] = x;
-            velocityData[i * 4 + 1] = y;
-            velocityData[i * 4 + 2] = z;
-            velocityData[i * 4 + 3] = 1;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        positionData[i * 4] = i - 512;
+        positionData[i * 4 + 1] = i - 512;
+        positionData[i * 4 + 2] = i - 512;
+        positionData[i * 4 + 3] = 1;
     }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    // Create the position texture
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
+
+    GLfloat *velocityData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+
+        velocityData[i * 4] = 1;
+        velocityData[i * 4 + 1] = 1;
+        velocityData[i * 4 + 2] = 1;
+        velocityData[i * 4 + 3] = 1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 }
 
 void setupFBO() {
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    glGenFramebuffers(2, positionFBO);
-    glGenFramebuffers(2, velocityFBO);
-    //////////////Position FBO #0: render to texture 0//////////////////
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glGenFramebuffers(1, &fboHandle);
     // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[0]);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
 
     // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[0], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, velocityTexture, 0);
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //////////////Position FBO #1: render to texture 1//////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[1]);
 
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[1], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    ///////////////Velocity FBO #0: render to texture 0////////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[0]);
-
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[0], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    ///////////////Velocity FBO #1: render to texture 1////////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[1]);
-
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[1], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    ///////////////////End////////////////////////
+    ///////////////////////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
         cout << "Framebuffer is complete" << endl;

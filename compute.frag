@@ -30,13 +30,10 @@ const float SPEED_LIMIT = 9.0;
 layout(binding = 0) uniform sampler2D texturePosition;
 layout(binding = 1) uniform sampler2D textureVelocity;
 
-layout(location = 0) out vec4 FragColor;
-
-subroutine vec4 ComputePassType();
-subroutine uniform ComputePassType ComputerPass;
+layout(location = 0) out vec4 positionOutput;
+layout(location = 1) out vec4 velocityOutput;
 
 // Compute position
-subroutine(ComputePassType)
 vec4 position() {
     vec2 uv = gl_FragCoord.xy / resolution.xy;
     vec4 tmpPos = texture2D(texturePosition, uv);
@@ -57,7 +54,6 @@ vec4 position() {
 }
 
 // Compute velocity
-subroutine(ComputePassType)
 vec4 velocity() {
     // cohesionDistance再也没用到
     zoneRadius = seperationDistance + alignmentDistance + cohesionDistance;
@@ -182,5 +178,6 @@ vec4 velocity() {
 }
 
 void main() {
-	FragColor = ComputerPass();
+	positionOutput = position();
+	velocityOutput = velocity();
 }
