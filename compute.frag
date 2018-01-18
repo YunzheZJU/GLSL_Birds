@@ -1,14 +1,18 @@
 #version 430
 
+in vec3 Position;
+in vec3 Normal;
+in vec2 TexCoord;
+
 uniform float delta = 0.016; // about 0.016
 uniform float seperationDistance = 20; // 20
 uniform float alignmentDistance = 40; // 40
 uniform float cohesionDistance = 20; //
-uniform vec3 predator = vec3(0.0);
+uniform vec3 predator = vec3(1000, 1000, 1000);
 
-const vec2 resolution = vec2(1280.0, 720.0);
-const float width = resolution.x;
-const float height = resolution.y;
+const vec2 resolution = vec2(32.0, 32.0);
+const float width = 32;
+const float height = 32;
 
 const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
@@ -22,21 +26,18 @@ float separationThresh = 0.45;
 float alignmentThresh = 0.65;
 
 const float BOUNDS = 400.0;
-const float UPPER_BOUNDS = BOUNDS;
-const float LOWER_BOUNDS = -UPPER_BOUNDS;
+const float UPPER_BOUNDS = 200;
+const float LOWER_BOUNDS = -200;
 
 const float SPEED_LIMIT = 9.0;
 
 layout(binding = 0) uniform sampler2D texturePosition;
 layout(binding = 1) uniform sampler2D textureVelocity;
 
-layout(location = 0) out vec4 FragColor;
-
-subroutine vec4 ComputePassType();
-subroutine uniform ComputePassType ComputerPass;
+layout(location = 0) out vec4 positionOutput;
+layout(location = 1) out vec4 velocityOutput;
 
 // Compute position
-subroutine(ComputePassType)
 vec4 position() {
     vec2 uv = gl_FragCoord.xy / resolution.xy;
     vec4 tmpPos = texture2D(texturePosition, uv);
@@ -51,12 +52,10 @@ vec4 position() {
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
-    return vec4(vec3(100.0), 1.0);
-    return vec4( position + velocity * delta * 15. , phase );
+    return vec4( position + velocity * delta * 15 , phase );
 }
 
 // Compute velocity
-subroutine(ComputePassType)
 vec4 velocity() {
     // cohesionDistance再也没用到
     zoneRadius = seperationDistance + alignmentDistance + cohesionDistance;
@@ -177,10 +176,12 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-    return vec4(vec3(100.0), 1.0);
+//    return vec4(vec3(0.0), 1.0);
+//    return vec4(selfVelocity * 1000, 1.0);
     return vec4(velocity, 1.0);
 }
 
 void main() {
-	FragColor = ComputerPass();
+	positionOutput = position();
+	velocityOutput = velocity();
 }

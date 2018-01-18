@@ -61,7 +61,7 @@ void main() {
     newPosition += pos;
 
     Color = vec4(VertexColor, 1.0);
-//    if (TextureUV.y == 0 && TextureUV.x == 0) {
+//    if (length(velocity) < 0.2) {
 //        Color = vec4(1.0, 0.0, 0.0, 1.0);
 //    }
 

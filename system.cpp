@@ -9,43 +9,32 @@
 
 Shader birdShader = Shader();
 Shader computeShader = Shader();
-//VBOPlane *plane;
-//VBOTeapot *teapot;
-//VBOTorus *torus;
-//VBOCube *cube;
 VBOBird *bird;
-//GLuint fboHandle;
-//GLuint pass1Index;
-//GLuint pass2Index;
-GLuint positionTexture[2];
-GLuint velocityTexture[2];
-GLuint positionComputer;
-GLuint velocityComputer;
-GLuint positionFBO[2];
-GLuint velocityFBO[2];
+GLuint positionTexture;
+GLuint velocityTexture;
+GLuint fboHandle;
 GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {1, 2, 350};                    // Position of camera
+vec3 predator(1000, 1000, 1000);
+GLfloat camera[3] = {0, 0, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
-GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
-bool bMsaa = false;                            // Switch of Multisampling anti-alias
-bool bShader = true;                       // Switch of shader
-GLfloat camera_locator[3] = {0, -5, 10};            // Position of shadow of camera
+GLfloat camera_polar[3] = {350, -1.57f, 0};            // Polar coordinates of camera
 bool bcamera = true;                        // Switch of camera/target control
 bool bfocus = true;                            // Status of window focus
-bool bmouse = false;                        // Whether mouse postion should be moved
 int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
+int mouse[2] = {1000, 1000};
 int time_0 = clock();
 int time_1;
-int currentTarget = 1;
 float delta;
+float seperationDistance = 20.0f;
+float alignmentDistance = 20.0f;
+float cohesionDistance = 20.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 //int focus = NONE;									// Focus object by clicking RMB
-GLfloat angle = 0.0f;
 
 void Idle() {
     glutPostRedisplay();
@@ -67,154 +56,52 @@ void Reshape(int width, int height) {
 }
 
 void Redraw() {
-    ///////////////Update position texture//////////////
+    ///////////////Update texture//////////////
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
+    glDisable(GL_DEPTH_TEST);
     computeShader.use();
     updateComputeShaderUniform();
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[currentTarget]);
-    // Render filter Image
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
-
-    glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &positionComputer);
-
-    // Render the full-screen quad
     glBindVertexArray(fsQuad);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    glFlush();
-    ///////////////Update velocity texture//////////////
-    computeShader.use();
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[currentTarget]);
-    // Render filter Image
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
-
-    glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &velocityComputer);
-//    updateComputeShaderUniform();
-
-    // Render the full-screen quad
-    glBindVertexArray(fsQuad);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-    glFlush();
     computeShader.disable();
+    glFlush();
     ///////////////////Draw the birds///////////////////
     birdShader.use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // Render scene
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glLoadIdentity();                        // Reset The Current Modelview Matrix
-    // 必须定义，以在固定管线中绘制物体
-    gluLookAt(camera[X], camera[Y], camera[Z],
-              target[X], target[Y], target[Z],
-              0, 1, 0);                            // Define the view matrix
-//    if (bMsaa) {
     glEnable(GL_MULTISAMPLE_ARB);
-//    } else {
-//        glDisable(GL_MULTISAMPLE_ARB);
-//    }
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
-//    angle += 0.5f;
-//    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
-    // Draw something here
-    updateShaderMVP();
-//    cube->render();
+    updateBirdShaderUniform();
     bird->render();
-//    DrawScene();
-
     birdShader.disable();
+    //////////////////////End////////////////////////
     // Show fps, message and other information
     PrintStatus();
-
-    //////////////////////End////////////////////////
     glutSwapBuffers();
-
-//    // Swap the textures
-//    GLuint temp = positionTexture[1];
-//    positionTexture[1] = positionTexture[0];
-//    positionTexture[0] = temp;
-//    temp = velocityTexture[1];
-//    velocityTexture[1] = velocityTexture[0];
-//    velocityTexture[0] = temp;
-
-    currentTarget = 1 - currentTarget;
 
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
 }
 
 void ProcessMouseClick(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        bMsaa = !bMsaa;
-        cout << "LMB pressed. Switch on/off multisampling anti-alias.\n" << endl;
-        strcpy(message, "LMB pressed. Switch on/off multisampling anti-alias.");
-        glutPostRedisplay();
-    } else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && fpsmode) {
-//        processPick(window);
-        bShader = !bShader;
+    if (state == GLUT_DOWN) {
+        cout << "Mouse button pressed." << endl;
+        mouse[X] = static_cast<int>((x - window[W] / 2) * 1.0 / (window[W] / 2));
+        mouse[Y] = static_cast<int>((y - window[H] / 2) * 1.0 / (window[H] / 2));
     }
 }
 
 void ProcessMouseMove(int x, int y) {
-    cout << "Mouse moves to (" << x << ", " << y << ")" << endl;
-    if (fpsmode) {
-        // Track target and reverse mouse moving to center point.
-        if (fpsmode == 2) {
-            // 鼠标位置居中，为确保在glutPositionWindow()之后执行
-            updateWindowcenter(window, windowcenter);
-            SetCursorPos(windowcenter[X], windowcenter[Y]);
-            glutSetCursor(GLUT_CURSOR_NONE);
-            fpsmode = 1;
-            return;
-        }
-        if (x < window[W] * 0.25) {
-            x += window[W] * 0.5;
-            bmouse = !bmouse;
-        } else if (x > window[W] * 0.75) {
-            x -= window[W] * 0.5;
-            bmouse = !bmouse;
-        }
-        if (y < window[H] * 0.25) {
-            y = static_cast<int>(window[H] * 0.25);
-            bmouse = !bmouse;
-        } else if (y > window[H] * 0.75) {
-            y = static_cast<int>(window[H] * 0.75);
-            bmouse = !bmouse;
-        }
-        // 将新坐标与屏幕中心的差值换算为polar的变化
-        camera_polar[A] = static_cast<GLfloat>((window[W] / 2 - x) * (180 / 180.0 * PI) / (window[W] / 4.0) *
-                                               PANNING_PACE);            // Delta pixels * 180 degrees / (1/4 width) * PANNING_PACE
-        camera_polar[T] = static_cast<GLfloat>((window[H] / 2 - y) * (90 / 180.0 * PI) / (window[H] / 4.0) *
-                                               PANNING_PACE);            // Delta pixels * 90 degrees / (1/4 height) * PANNING_PACE
-        // 移动光标
-        if (bmouse) {
-            SetCursorPos(glutGet(GLUT_WINDOW_X) + x, glutGet(GLUT_WINDOW_Y) + y);
-            bmouse = !bmouse;
-        }
-        // 更新摄像机目标
-        updateTarget(camera, target, camera_polar);
-    }
+//    cout << "Mouse moves to (" << x << ", " << y << ")" << endl;
 }
 
 void ProcessFocus(int state) {
     if (state == GLUT_LEFT) {
-        bfocus = GL_FALSE;
+        bfocus = false;
         cout << "Focus is on other window." << endl;
     } else if (state == GLUT_ENTERED) {
-        bfocus = GL_TRUE;
+        bfocus = true;
         cout << "Focus is on this window." << endl;
     }
 }
@@ -391,47 +278,6 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
             }
             break;
         }
-            // 光源颜色分量
-        case 'R':
-        case 'r': {
-            cout << "R pressed." << endl;
-            currentColor[0] -= 0.1f;
-            if (currentColor[0] < 0) {
-                currentColor[0] = 1.0f;
-            }
-            break;
-        }
-        case 'G':
-        case 'g': {
-            cout << "G pressed." << endl;
-            currentColor[1] -= 0.1f;
-            if (currentColor[1] < 0) {
-                currentColor[1] = 1.0f;
-            }
-            break;
-        }
-        case 'B':
-        case 'b': {
-            cout << "B pressed." << endl;
-            currentColor[2] -= 0.1f;
-            if (currentColor[2] < 0) {
-                currentColor[2] = 1.0f;
-            }
-            break;
-        }
-            // 光源强度（衰减）
-        case '+': {
-            cout << "+ pressed." << endl;
-            constantattenuation -= 0.1f;
-            cout << constantattenuation << endl;
-            break;
-        }
-        case '-': {
-            cout << "- pressed." << endl;
-            constantattenuation += 0.1f;
-            cout << constantattenuation << endl;
-            break;
-        }
             // 屏幕截图
         case 'X':
         case 'x': {
@@ -453,15 +299,57 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
 void ProcessSpecialKey(int k, int x, int y) {
     switch (k) {
         // Up arrow
-        case 101: {
-            lightPosition0[Y] += 5;
+        case GLUT_KEY_UP: {
+            if (seperationDistance < 99.9f) {
+                seperationDistance += 5.0f;
+            }
+            cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
+            sprintf(message,  "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
             break;
         }
             // Down arrow
-        case 103: {
-            if (lightPosition0[Y] >= 10) {
-                lightPosition0[Y] -= 5;
+        case GLUT_KEY_DOWN: {
+            if (seperationDistance > 0.1f) {
+                seperationDistance -= 5.0f;
             }
+            cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
+            sprintf(message,  "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
+            break;
+        }
+            // Left arrow
+        case GLUT_KEY_LEFT: {
+            if (alignmentDistance > 0.1f) {
+                alignmentDistance -= 5.0f;
+            }
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
+            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            break;
+        }
+            // Right arrow
+        case GLUT_KEY_RIGHT: {
+            if (alignmentDistance < 99.9f) {
+                alignmentDistance += 5.0f;
+            }
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
+            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            break;
+        }
+            // Home
+        case GLUT_KEY_HOME: {
+            if (cohesionDistance < 99.9f) {
+                cohesionDistance += 5.0f;
+            }
+            cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
+            sprintf(message,  "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
+            break;
+        }
+            // End
+        case GLUT_KEY_END: {
+            if (cohesionDistance > 0.1f) {
+                cohesionDistance -= 5.0f;
+            }
+            cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
+            sprintf(message,  "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
             break;
         }
         default:
@@ -535,81 +423,19 @@ void PrintStatus() {
 }
 
 void initVBO() {
-//    plane = new VBOPlane(50.0f, 50.0f, 1, 1);
-//    teapot = new VBOTeapot(14, glm::mat4(1.0f));
-//    torus = new VBOTorus(0.7f * 2, 0.3f * 2, 50, 50);
-//    cube = new VBOCube();
     bird = new VBOBird(32);
 }
 
 void setShader() {
-    GLuint shaderProgram = computeShader.getProgram();
-    positionComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "position");
-    velocityComputer = glGetSubroutineIndex(shaderProgram, GL_FRAGMENT_SHADER, "velocity");
-
-//    shader.setUniform("Ka", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Kd", 0.9f, 0.5f, 0.3f);
-//    shader.setUniform("Ks", 0.8f, 0.8f, 0.8f);
-//    shader.setUniform("Shininess", 100.0f);
-//    shader.setUniform("EdgeThreshold", 0.05f);
-//    shader.setUniform("Width", window[W]);
-//    shader.setUniform("Height", window[H]);
-//    shader.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
-
-//    updateShaderMVP();
 }
 
-void updateMVPZero() {
-//    shader.setUniform("Light.Position", view * vec4(0.0f, 0.0f, 10.0f, 1.0f));
-}
-
-void updateMVPOne() {
-//    model = glm::translate(model, vec3(-2.0f, -1.5f, 0.0f));
-//    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-//    shader.setUniform("Material.Kd", 0.9f, 0.9f, 0.9f);
-//    shader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-//    shader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-//    shader.setUniform("Material.Shininess", 100.0f);
-
-    updateShaderMVP();
-}
-
-void updateMVPTwo() {
-    model = mat4(1.0f);
-    model = glm::translate(model, vec3(0.0f, -2.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-//    model = glm::rotate(model, glm::radians(-90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-    birdShader.setUniform("Material.Kd", 0.4f, 0.4f, 0.4f);
-    birdShader.setUniform("Material.Ks", 0.0f, 0.0f, 0.0f);
-    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    birdShader.setUniform("Material.Shininess", 1.0f);
-
-    updateShaderMVP();
-}
-
-void updateMVPThree() {
-    model = mat4(1.0f);
-    model = glm::translate(model, vec3(2.0f, 0.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(angle), vec3(0.0f, 1.0f, 0.0f));
-    model = glm::rotate(model, glm::radians(90.0f), vec3(1.0f, 0.0f, 0.0f));
-
-    birdShader.setUniform("Material.Kd", 0.9f, 0.5f, 0.2f);
-    birdShader.setUniform("Material.Ks", 0.95f, 0.95f, 0.95f);
-    birdShader.setUniform("Material.Ka", 0.1f, 0.1f, 0.1f);
-    birdShader.setUniform("Material.Shininess", 100.0f);
-
-    updateShaderMVP();
-}
-
-void updateShaderMVP() {
+void updateBirdShaderUniform() {
     birdShader.use();
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, 1.7778f, 0.1f, 30000.0f);
     model = mat4(1.0f);
+    model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
     mat4 mv = view * model;
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
@@ -620,118 +446,102 @@ void updateShaderMVP() {
 
 void updateComputeShaderUniform() {
     time_1 = clock();
-    delta = (time_1 - time_0) / 1000.0;
+    delta = static_cast<float>((time_1 - time_0) / 1000.0);
     if (delta > 1) {
         delta = 1;
     }
     time_0 = time_1;
-    computeShader.setUniform("seperationDistance", 20.0f);
-    computeShader.setUniform("alignmentDistance", 40.0f);
-    computeShader.setUniform("cohesionDistance", 20.0f);
-    computeShader.setUniform("predator", vec3(0, 0, 0));
     computeShader.setUniform("delta", delta);
+    computeShader.setUniform("seperationDistance", seperationDistance);
+    computeShader.setUniform("alignmentDistance", alignmentDistance);
+    computeShader.setUniform("cohesionDistance", cohesionDistance);
+    predator = vec3(mouse[X] * 0.5, mouse[Y] * 0.5, 0);
+    computeShader.setUniform("predator", predator);
+    mouse[X] = mouse[Y] = 1000;
+    model = mat4(1.0f);
+    view = mat4(1.0f);
+    projection = mat4(1.0f);
+    mat4 mv = view * model;
+    computeShader.setUniform("ModelMatrix", model);
+    computeShader.setUniform("ViewMatrix", view);
+    computeShader.setUniform("ProjectionMatrix", projection);
+    computeShader.setUniform("ModelViewMatrix", mv);
+    computeShader.setUniform("MVP", projection * mv);
 }
 
 void setupTexture() {
-    glGenTextures(2, positionTexture);
-    glGenTextures(2, velocityTexture);
+    glGenTextures(1, &positionTexture);
+    glGenTextures(1, &velocityTexture);
 
-    for (int num = 0; num < 2; num++) {
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, positionTexture[num]);
+    // Create the position texture
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
 
-        GLfloat *positionData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+    GLfloat *positionData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-            positionData[i * 4] = x;
-            positionData[i * 4 + 1] = y;
-            positionData[i * 4 + 2] = z;
-            positionData[i * 4 + 3] = 1;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, velocityTexture[num]);
-
-        GLfloat *velocityData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-
-            velocityData[i * 4] = x * 10;
-            velocityData[i * 4 + 1] = y * 10;
-            velocityData[i * 4 + 2] = z * 10;
-            velocityData[i * 4 + 3] = 1;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        positionData[i * 4] = x;
+        positionData[i * 4 + 1] = y;
+        positionData[i * 4 + 2] = z;
+//        positionData[i * 4] = i - 512;
+//        positionData[i * 4 + 1] = i - 512;
+//        positionData[i * 4 + 2] = i - 512;
+        positionData[i * 4 + 3] = 1;
     }
-    float *data = new float[32 * 32 * 4];
-    data[10] = 1.0f;
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1]);
-    glReadPixels(0, 0, 32, 32, GL_RGBA16F, GL_FLOAT, data);
-    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA16F, GL_FLOAT, data);
-    float a = data[0];
-    float b = data[10];
-    float c = data[100];
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    // Create the position texture
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
+
+    GLfloat *velocityData = new GLfloat[1024 * 4];
+    for (int i = 0; i < 1024; i++) {
+        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
+
+        velocityData[i * 4] = x;
+        velocityData[i * 4 + 1] = y;
+        velocityData[i * 4 + 2] = z;
+        velocityData[i * 4 + 3] = 1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    ///////////////////////////////////////////
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, positionTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture);
 }
 
 void setupFBO() {
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    glGenFramebuffers(2, positionFBO);
-    glGenFramebuffers(2, velocityFBO);
-    //////////////Position FBO #0: render to texture 0//////////////////
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glGenFramebuffers(1, &fboHandle);
     // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[0]);
+    glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
 
     // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[0], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, velocityTexture, 0);
 
     // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    //////////////Position FBO #1: render to texture 1//////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[1]);
+    glDrawBuffers(2, drawBuffers);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[1], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    ///////////////Velocity FBO #0: render to texture 0////////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[0]);
-
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[0], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    ///////////////Velocity FBO #1: render to texture 1////////////////////
-    // Bind the framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[1]);
-
-    // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[1], 0);
-
-    // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
-    ///////////////////End////////////////////////
+    ///////////////////////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
         cout << "Framebuffer is complete" << endl;

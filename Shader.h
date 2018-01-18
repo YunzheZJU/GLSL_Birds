@@ -6,7 +6,6 @@
 #define GPUBASEDRENDERING_A1_SHADER_H
 
 #include "global.h"
-#include "textfile.h"
 #include <map>
 
 // Using namespace std for cout

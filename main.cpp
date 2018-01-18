@@ -7,14 +7,14 @@ int main(int argc, char *argv[]) {
     int windowHandle = glutCreateWindow("GPU Based Rendering: Project");
 
     // Set the background color - white
-    glClearColor(0.2, 0.2, 0.2, 1.0);
-//    glColor3f(0.1, 0.3, 0.8);
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glColor3f(0.0, 0.0, 0.0);
 
     glutDisplayFunc(Redraw);
     glutReshapeFunc(Reshape);
-//    glutMouseFunc(ProcessMouseClick);
-//    glutPassiveMotionFunc(ProcessMouseMove);
-//    glutEntryFunc(ProcessFocus);
+    glutMouseFunc(ProcessMouseClick);
+    glutPassiveMotionFunc(ProcessMouseMove);
+    glutEntryFunc(ProcessFocus);
     glutKeyboardFunc(ProcessNormalKey);
     glutSpecialFunc(ProcessSpecialKey);
     glutIdleFunc(Idle);
