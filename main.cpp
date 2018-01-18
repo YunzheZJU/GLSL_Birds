@@ -12,9 +12,9 @@ int main(int argc, char *argv[]) {
 
     glutDisplayFunc(Redraw);
     glutReshapeFunc(Reshape);
-//    glutMouseFunc(ProcessMouseClick);
-//    glutPassiveMotionFunc(ProcessMouseMove);
-//    glutEntryFunc(ProcessFocus);
+    glutMouseFunc(ProcessMouseClick);
+    glutPassiveMotionFunc(ProcessMouseMove);
+    glutEntryFunc(ProcessFocus);
     glutKeyboardFunc(ProcessNormalKey);
     glutSpecialFunc(ProcessSpecialKey);
     glutIdleFunc(Idle);

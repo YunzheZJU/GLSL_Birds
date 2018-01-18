@@ -21,14 +21,12 @@ vec3 predator(1000, 1000, 1000);
 GLfloat camera[3] = {0, 0, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {350, -1.57f, 0};            // Polar coordinates of camera
-bool bMsaa = false;                            // Switch of Multisampling anti-alias
-bool bShader = true;                       // Switch of shader
 bool bcamera = true;                        // Switch of camera/target control
 bool bfocus = true;                            // Status of window focus
-bool bmouse = false;                        // Whether mouse postion should be moved
 int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
+int mouse[2] = {1000, 1000};
 int time_0 = clock();
 int time_1;
 float delta;
@@ -87,63 +85,23 @@ void Redraw() {
 }
 
 void ProcessMouseClick(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        bMsaa = !bMsaa;
-        cout << "LMB pressed. Switch on/off multisampling anti-alias.\n" << endl;
-        strcpy(message, "LMB pressed. Switch on/off multisampling anti-alias.");
-        glutPostRedisplay();
-    } else if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN && fpsmode) {
-        bShader = !bShader;
+    if (state == GLUT_DOWN) {
+        cout << "Mouse button pressed." << endl;
+        mouse[X] = static_cast<int>((x - window[W] / 2) * 1.0 / (window[W] / 2));
+        mouse[Y] = static_cast<int>((y - window[H] / 2) * 1.0 / (window[H] / 2));
     }
 }
 
 void ProcessMouseMove(int x, int y) {
-    cout << "Mouse moves to (" << x << ", " << y << ")" << endl;
-    if (fpsmode) {
-        // Track target and reverse mouse moving to center point.
-        if (fpsmode == 2) {
-            // 鼠标位置居中，为确保在glutPositionWindow()之后执行
-            updateWindowcenter(window, windowcenter);
-            SetCursorPos(windowcenter[X], windowcenter[Y]);
-            glutSetCursor(GLUT_CURSOR_NONE);
-            fpsmode = 1;
-            return;
-        }
-        if (x < window[W] * 0.25) {
-            x += window[W] * 0.5;
-            bmouse = !bmouse;
-        } else if (x > window[W] * 0.75) {
-            x -= window[W] * 0.5;
-            bmouse = !bmouse;
-        }
-        if (y < window[H] * 0.25) {
-            y = static_cast<int>(window[H] * 0.25);
-            bmouse = !bmouse;
-        } else if (y > window[H] * 0.75) {
-            y = static_cast<int>(window[H] * 0.75);
-            bmouse = !bmouse;
-        }
-        // 将新坐标与屏幕中心的差值换算为polar的变化
-        camera_polar[A] = static_cast<GLfloat>((window[W] / 2 - x) * (180 / 180.0 * PI) / (window[W] / 4.0) *
-                                               PANNING_PACE);            // Delta pixels * 180 degrees / (1/4 width) * PANNING_PACE
-        camera_polar[T] = static_cast<GLfloat>((window[H] / 2 - y) * (90 / 180.0 * PI) / (window[H] / 4.0) *
-                                               PANNING_PACE);            // Delta pixels * 90 degrees / (1/4 height) * PANNING_PACE
-        // 移动光标
-        if (bmouse) {
-            SetCursorPos(glutGet(GLUT_WINDOW_X) + x, glutGet(GLUT_WINDOW_Y) + y);
-            bmouse = !bmouse;
-        }
-        // 更新摄像机目标
-        updateTarget(camera, target, camera_polar);
-    }
+//    cout << "Mouse moves to (" << x << ", " << y << ")" << endl;
 }
 
 void ProcessFocus(int state) {
     if (state == GLUT_LEFT) {
-        bfocus = GL_FALSE;
+        bfocus = false;
         cout << "Focus is on other window." << endl;
     } else if (state == GLUT_ENTERED) {
-        bfocus = GL_TRUE;
+        bfocus = true;
         cout << "Focus is on this window." << endl;
     }
 }
@@ -343,7 +301,7 @@ void ProcessSpecialKey(int k, int x, int y) {
         // Up arrow
         case GLUT_KEY_UP: {
             if (seperationDistance < 99.9f) {
-                seperationDistance += 0.1f;
+                seperationDistance += 5.0f;
             }
             cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
             sprintf(message,  "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
@@ -352,7 +310,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Down arrow
         case GLUT_KEY_DOWN: {
             if (seperationDistance > 0.1f) {
-                seperationDistance -= 0.1f;
+                seperationDistance -= 5.0f;
             }
             cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
             sprintf(message,  "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
@@ -361,7 +319,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Left arrow
         case GLUT_KEY_LEFT: {
             if (alignmentDistance > 0.1f) {
-                alignmentDistance -= 0.1f;
+                alignmentDistance -= 5.0f;
             }
             cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
             sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
@@ -370,7 +328,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Right arrow
         case GLUT_KEY_RIGHT: {
             if (alignmentDistance < 99.9f) {
-                alignmentDistance += 0.1f;
+                alignmentDistance += 5.0f;
             }
             cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
             sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
@@ -379,7 +337,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Home
         case GLUT_KEY_HOME: {
             if (cohesionDistance < 99.9f) {
-                cohesionDistance += 0.1f;
+                cohesionDistance += 5.0f;
             }
             cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
             sprintf(message,  "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
@@ -388,7 +346,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // End
         case GLUT_KEY_END: {
             if (cohesionDistance > 0.1f) {
-                cohesionDistance -= 0.1f;
+                cohesionDistance -= 5.0f;
             }
             cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
             sprintf(message,  "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
@@ -494,10 +452,12 @@ void updateComputeShaderUniform() {
     }
     time_0 = time_1;
     computeShader.setUniform("delta", delta);
-    computeShader.setUniform("seperationDistance", 20.0f);
-    computeShader.setUniform("alignmentDistance", 20.0f);
-    computeShader.setUniform("cohesionDistance", 20.0f);
-    computeShader.setUniform("predator", vec3(1000, 1000, 1000));
+    computeShader.setUniform("seperationDistance", seperationDistance);
+    computeShader.setUniform("alignmentDistance", alignmentDistance);
+    computeShader.setUniform("cohesionDistance", cohesionDistance);
+    predator = vec3(mouse[X] * 0.5, mouse[Y] * 0.5, 0);
+    computeShader.setUniform("predator", predator);
+    mouse[X] = mouse[Y] = 1000;
     model = mat4(1.0f);
     view = mat4(1.0f);
     projection = mat4(1.0f);
