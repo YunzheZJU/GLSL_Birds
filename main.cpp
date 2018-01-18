@@ -7,7 +7,7 @@ int main(int argc, char *argv[]) {
     int windowHandle = glutCreateWindow("GPU Based Rendering: A1");
 
     // Set the background color - white
-    glClearColor(0.2, 0.2, 0.2, 1.0);
+    glClearColor(1.0, 1.0, 1.0, 1.0);
 //    glColor3f(0.1, 0.3, 0.8);
 
     glutDisplayFunc(Redraw);

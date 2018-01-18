@@ -27,7 +27,7 @@ GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {1, 1, 350};                    // Position of camera
+GLfloat camera[3] = {0, 0, 5};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
 GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
@@ -505,7 +505,7 @@ void PrintStatus() {
 }
 
 void initVBO() {
-    bird = new VBOBird(32);
+    bird = new VBOBird(16);
 }
 
 void setShader() {
@@ -536,7 +536,7 @@ void updateComputeShaderUniform() {
     computeShader.setUniform("seperationDistance", 20.0f);
     computeShader.setUniform("alignmentDistance", 40.0f);
     computeShader.setUniform("cohesionDistance", 20.0f);
-    computeShader.setUniform("predator", vec3(0, 0, 0));
+    computeShader.setUniform("predator", vec3(1000, 1000, 1000));
     model = mat4(1.0f);
     view = mat4(1.0f);
     projection = mat4(1.0f);
@@ -561,9 +561,9 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
 
-        positionData[i * 4] = x;
-        positionData[i * 4 + 1] = y;
-        positionData[i * 4 + 2] = z;
+        positionData[i * 4] = i - 512;
+        positionData[i * 4 + 1] = i - 512;
+        positionData[i * 4 + 2] = i - 512;
         positionData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
@@ -583,9 +583,9 @@ void setupTexture() {
         GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
         GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
 
-        velocityData[i * 4] = x;
-        velocityData[i * 4 + 1] = y;
-        velocityData[i * 4 + 2] = z;
+        velocityData[i * 4] = 1;
+        velocityData[i * 4 + 1] = 1;
+        velocityData[i * 4 + 2] = 1;
         velocityData[i * 4 + 3] = 1;
     }
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
