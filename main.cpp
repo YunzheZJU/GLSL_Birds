@@ -40,12 +40,10 @@ int main(int argc, char *argv[]) {
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);
     }
-//    cout << "Shader compilation OK!" << endl;
-//    exit(0);
 
-//    SetUpLights();
     initVBO();
     setupTexture();
+    setupFBO();
     setupVAO();
 //    setShader();
 

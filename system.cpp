@@ -19,6 +19,8 @@ VBOBird *bird;
 //GLuint pass2Index;
 GLuint positionTexture[2];
 GLuint velocityTexture[2];
+GLuint positionFBO;
+GLuint velocityFBO;
 GLuint fsQuad;
 mat4 model;
 mat4 view;
@@ -640,6 +642,40 @@ void setupTexture() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     }
+}
+
+void setupFBO() {
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
+//////////////Position FBO//////////////////
+    // Generate and bind the framebuffer
+    glGenFramebuffers(1, &positionFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+
+    // Bind the texture to the FBO
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[1], 0);
+
+    // Set the targets for the fragment output variables
+    glDrawBuffers(1, drawBuffers);
+///////////////Velocity FBO////////////////////
+    // Generate and bind the framebuffer
+    glGenFramebuffers(1, &positionFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+
+    // Bind the texture to the FBO
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[1], 0);
+
+    // Set the targets for the fragment output variables
+    glDrawBuffers(1, drawBuffers);
+///////////////////End////////////////////////
+    GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (result == GL_FRAMEBUFFER_COMPLETE) {
+        cout << "Framebuffer is complete" << endl;
+    } else {
+        cout << "Framebuffer error: " << result << endl;
+    }
+
+    // Unbind the framebuffer, and revert to default framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void setupVAO() {
