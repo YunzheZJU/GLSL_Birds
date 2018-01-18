@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     setupTexture();
     setupFBO();
     setupVAO();
-//    setShader();
+    setShader();
 
     glutMainLoop();
 

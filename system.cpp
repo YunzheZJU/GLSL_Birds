@@ -21,8 +21,8 @@ GLuint positionTexture[2];
 GLuint velocityTexture[2];
 GLuint positionComputer;
 GLuint velocityComputer;
-GLuint positionFBO;
-GLuint velocityFBO;
+GLuint positionFBO[2];
+GLuint velocityFBO[2];
 GLuint fsQuad;
 mat4 model;
 mat4 view;
@@ -41,6 +41,7 @@ int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
 int time_0 = clock();
 int time_1;
+int currentTarget = 1;
 float delta;
 char message[70] = "Welcome!";                        // Message string to be shown
 //int focus = NONE;									// Focus object by clicking RMB
@@ -69,12 +70,12 @@ void Redraw() {
     ///////////////Update position texture//////////////
     computeShader.use();
     updateComputeShaderUniform();
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[currentTarget]);
     // Render filter Image
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
 
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -87,12 +88,13 @@ void Redraw() {
     glBindVertexArray(0);
     glFlush();
     ///////////////Update velocity texture//////////////
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO);
+    computeShader.use();
+    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[currentTarget]);
     // Render filter Image
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
 
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -122,9 +124,9 @@ void Redraw() {
 //        glDisable(GL_MULTISAMPLE_ARB);
 //    }
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[0]);
+    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
 //    angle += 0.5f;
 //    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &pass1Index);
     glEnable(GL_DEPTH_TEST);
@@ -134,20 +136,22 @@ void Redraw() {
     bird->render();
 //    DrawScene();
 
+    birdShader.disable();
     // Show fps, message and other information
     PrintStatus();
-    birdShader.disable();
 
     //////////////////////End////////////////////////
     glutSwapBuffers();
 
-    // Swap the textures
-    GLuint temp = positionTexture[1];
-    positionTexture[1] = positionTexture[0];
-    positionTexture[0] = temp;
-    temp = velocityTexture[1];
-    velocityTexture[1] = velocityTexture[0];
-    velocityTexture[0] = temp;
+//    // Swap the textures
+//    GLuint temp = positionTexture[1];
+//    positionTexture[1] = positionTexture[0];
+//    positionTexture[0] = temp;
+//    temp = velocityTexture[1];
+//    velocityTexture[1] = velocityTexture[0];
+//    velocityTexture[0] = temp;
+
+    currentTarget = 1 - currentTarget;
 
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
 }
@@ -552,7 +556,7 @@ void setShader() {
 //    shader.setUniform("Height", window[H]);
 //    shader.setUniform("Light.Intensity", vec3(1.0f, 1.0f, 1.0f));
 
-    updateShaderMVP();
+//    updateShaderMVP();
 }
 
 void updateMVPZero() {
@@ -681,20 +685,38 @@ void setupTexture() {
 
 void setupFBO() {
     GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
-    //////////////Position FBO//////////////////
-    // Generate and bind the framebuffer
-    glGenFramebuffers(1, &positionFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO);
+    glGenFramebuffers(2, positionFBO);
+    glGenFramebuffers(2, velocityFBO);
+    //////////////Position FBO #0: render to texture 0//////////////////
+    // Bind the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[0]);
+
+    // Bind the texture to the FBO
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[0], 0);
+
+    // Set the targets for the fragment output variables
+    glDrawBuffers(1, drawBuffers);
+    //////////////Position FBO #1: render to texture 1//////////////////
+    // Bind the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, positionFBO[1]);
 
     // Bind the texture to the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[1], 0);
 
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
-    ///////////////Velocity FBO////////////////////
-    // Generate and bind the framebuffer
-    glGenFramebuffers(1, &velocityFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO);
+    ///////////////Velocity FBO #0: render to texture 0////////////////////
+    // Bind the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[0]);
+
+    // Bind the texture to the FBO
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[0], 0);
+
+    // Set the targets for the fragment output variables
+    glDrawBuffers(1, drawBuffers);
+    ///////////////Velocity FBO #1: render to texture 1////////////////////
+    // Bind the framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, velocityFBO[1]);
 
     // Bind the texture to the FBO
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, velocityTexture[1], 0);
