@@ -17,9 +17,10 @@ GLuint fsQuad;
 mat4 model;
 mat4 view;
 mat4 projection;
-GLfloat camera[3] = {0, 0, 5};                    // Position of camera
+vec3 predator(1000, 1000, 1000);
+GLfloat camera[3] = {0, 0, 350};                    // Position of camera
 GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
-GLfloat camera_polar[3] = {5, -1.57f, 0};            // Polar coordinates of camera
+GLfloat camera_polar[3] = {350, -1.57f, 0};            // Polar coordinates of camera
 bool bMsaa = false;                            // Switch of Multisampling anti-alias
 bool bShader = true;                       // Switch of shader
 bool bcamera = true;                        // Switch of camera/target control
@@ -31,6 +32,9 @@ int windowcenter[2];                                // Center of this window, to
 int time_0 = clock();
 int time_1;
 float delta;
+float seperationDistance = 20.0f;
+float alignmentDistance = 20.0f;
+float cohesionDistance = 20.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 //int focus = NONE;									// Focus object by clicking RMB
 
@@ -337,11 +341,57 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
 void ProcessSpecialKey(int k, int x, int y) {
     switch (k) {
         // Up arrow
-        case 101: {
+        case GLUT_KEY_UP: {
+            if (seperationDistance < 99.9f) {
+                seperationDistance += 0.1f;
+            }
+            cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
+            sprintf(message,  "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
             break;
         }
             // Down arrow
-        case 103: {
+        case GLUT_KEY_DOWN: {
+            if (seperationDistance > 0.1f) {
+                seperationDistance -= 0.1f;
+            }
+            cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
+            sprintf(message,  "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
+            break;
+        }
+            // Left arrow
+        case GLUT_KEY_LEFT: {
+            if (alignmentDistance > 0.1f) {
+                alignmentDistance -= 0.1f;
+            }
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
+            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            break;
+        }
+            // Right arrow
+        case GLUT_KEY_RIGHT: {
+            if (alignmentDistance < 99.9f) {
+                alignmentDistance += 0.1f;
+            }
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
+            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            break;
+        }
+            // Home
+        case GLUT_KEY_HOME: {
+            if (cohesionDistance < 99.9f) {
+                cohesionDistance += 0.1f;
+            }
+            cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
+            sprintf(message,  "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
+            break;
+        }
+            // End
+        case GLUT_KEY_END: {
+            if (cohesionDistance > 0.1f) {
+                cohesionDistance -= 0.1f;
+            }
+            cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
+            sprintf(message,  "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
             break;
         }
         default:
@@ -445,7 +495,7 @@ void updateComputeShaderUniform() {
     time_0 = time_1;
     computeShader.setUniform("delta", delta);
     computeShader.setUniform("seperationDistance", 20.0f);
-    computeShader.setUniform("alignmentDistance", 40.0f);
+    computeShader.setUniform("alignmentDistance", 20.0f);
     computeShader.setUniform("cohesionDistance", 20.0f);
     computeShader.setUniform("predator", vec3(1000, 1000, 1000));
     model = mat4(1.0f);
@@ -528,7 +578,7 @@ void setupFBO() {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, velocityTexture, 0);
 
     // Set the targets for the fragment output variables
-    glDrawBuffers(1, drawBuffers);
+    glDrawBuffers(2, drawBuffers);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     ///////////////////////////////////////////
