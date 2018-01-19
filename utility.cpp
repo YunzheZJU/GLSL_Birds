@@ -9,10 +9,15 @@
 GLfloat cameramatrix[3][3];
 
 void cameraMakeZero(GLfloat *camera, GLfloat *target, GLfloat *polar) {
-    camera[X] = target[X] = target[Z] = polar[T] = 0;
-    camera[Y] = target[Y] = 0;
-    camera[Z] = polar[R] = 5;
-    polar[A] = 0;
+    camera[X] = DEFAULT_CAMERA_X;
+    camera[Y] = DEFAULT_CAMERA_Y;
+    camera[Z] = DEFAULT_CAMERA_Z;
+    target[X] = DEFAULT_TARGET_X;
+    target[Y] = DEFAULT_TARGET_Y;
+    target[Z] = DEFAULT_TARGET_Z;
+    polar[R] = DEFAULT_POLAR_R;
+    polar[A] = DEFAULT_POLAR_A;
+    polar[T] = DEFAULT_POLAR_T;
 }
 
 void updateCamera(GLfloat *camera, GLfloat *target, GLfloat *polar) {

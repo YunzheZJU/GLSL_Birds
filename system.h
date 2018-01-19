@@ -2,8 +2,8 @@
 // Created by Yunzhe on 2017/12/4.
 //
 
-#ifndef GPUBASEDRENDERING_A1_SYSTEM_H
-#define GPUBASEDRENDERING_A1_SYSTEM_H
+#ifndef GPUBASEDRENDERING_PROJECT_SYSTEM_H
+#define GPUBASEDRENDERING_PROJECT_SYSTEM_H
 
 // Include related head files
 #include "global.h"
@@ -37,7 +37,7 @@ void PrintStatus();
 
 void initVBO();
 
-void setShader();
+void setupShader();
 
 void updateBirdShaderUniform();
 
@@ -49,4 +49,4 @@ void setupFBO();
 
 void setupVAO();
 
-#endif //GPUBASEDRENDERING_A1_SYSTEM_H
+#endif //GPUBASEDRENDERING_PROJECT_SYSTEM_H

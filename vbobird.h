@@ -12,8 +12,6 @@ class VBOBird : public Drawable {
 private:
     unsigned int vaoHandle;
     int nVerts;
-
-    void generateVerts();
 public:
     VBOBird(int base);
 

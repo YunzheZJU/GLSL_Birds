@@ -18,11 +18,12 @@ mat4 model;
 mat4 view;
 mat4 projection;
 vec3 predator(1000, 1000, 1000);
-GLfloat camera[3] = {0, 0, 350};                    // Position of camera
-GLfloat target[3] = {0, 0, 0};                    // Position of target of camera
-GLfloat camera_polar[3] = {350, -1.57f, 0};            // Polar coordinates of camera
+GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};                    // Position of camera
+GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y, DEFAULT_TARGET_Z};                    // Position of target of camera
+GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};            // Polar coordinates of camera
 bool bcamera = true;                        // Switch of camera/target control
 bool bfocus = true;                            // Status of window focus
+bool bAnimation = true;
 int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
@@ -62,16 +63,18 @@ void Redraw() {
     glDisable(GL_DEPTH_TEST);
     computeShader.use();
     updateComputeShaderUniform();
-    glBindVertexArray(fsQuad);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    if (bAnimation) {
+        glBindVertexArray(fsQuad);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+    }
     computeShader.disable();
     glFlush();
     ///////////////////Draw the birds///////////////////
     birdShader.use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_MULTISAMPLE_ARB);
+    glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     updateBirdShaderUniform();
     bird->render();
@@ -113,6 +116,13 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
             cout << "Bye." << endl;
             exit(0);
         }
+            // 空格
+        case 32: {
+            cout << "Space pressed. Animation stops/continues playing.\n" << endl;
+            strcpy(message, "Space pressed.  Animation stops/continues playing.");
+            bAnimation = !bAnimation;
+            break;
+        }
             // 切换摄像机本体/焦点控制
         case 'Z':
         case 'z': {
@@ -125,7 +135,7 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'c': {
             strcpy(message, "C pressed. Switch fps control!");
             // 摄像机归零
-            cameraMakeZero(camera, target, camera_polar);
+            cameraMakeZero(camera, target, polar);
             if (!fpsmode) {
                 // 调整窗口位置
                 int windowmaxx = glutGet(GLUT_WINDOW_X) + window[W];
@@ -153,20 +163,20 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'a': {
             strcpy(message, "A pressed. Watch carefully!");
             if (fpsmode) {
-                saveCamera(camera, target, camera_polar);
-                camera[X] -= cos(camera_polar[A]) * MOVING_PACE;
-                camera[Z] += sin(camera_polar[A]) * MOVING_PACE;
-                target[X] -= cos(camera_polar[A]) * MOVING_PACE;
-                target[Z] += sin(camera_polar[A]) * MOVING_PACE;
+                saveCamera(camera, target, polar);
+                camera[X] -= cos(polar[A]) * MOVING_PACE;
+                camera[Z] += sin(polar[A]) * MOVING_PACE;
+                target[X] -= cos(polar[A]) * MOVING_PACE;
+                target[Z] += sin(polar[A]) * MOVING_PACE;
             } else {
                 if (bcamera) {
-                    camera_polar[A] -= OBSERVING_PACE * 0.1;
-                    updateCamera(camera, target, camera_polar);
+                    polar[A] -= OBSERVING_PACE * 0.1;
+                    updateCamera(camera, target, polar);
                     cout << fixed << setprecision(1) << "A pressed.\n\tPosition of camera is set to (" <<
                          camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
                 } else {
                     target[X] -= OBSERVING_PACE;
-                    updatePolar(camera, target, camera_polar);
+                    updatePolar(camera, target, polar);
                     cout << fixed << setprecision(1) << "A pressed.\n\tPosition of camera target is set to (" <<
                          target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
                 }
@@ -177,20 +187,20 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'd': {
             strcpy(message, "D pressed. Watch carefully!");
             if (fpsmode) {
-                saveCamera(camera, target, camera_polar);
-                camera[X] += cos(camera_polar[A]) * MOVING_PACE;
-                camera[Z] -= sin(camera_polar[A]) * MOVING_PACE;
-                target[X] += cos(camera_polar[A]) * MOVING_PACE;
-                target[Z] -= sin(camera_polar[A]) * MOVING_PACE;
+                saveCamera(camera, target, polar);
+                camera[X] += cos(polar[A]) * MOVING_PACE;
+                camera[Z] -= sin(polar[A]) * MOVING_PACE;
+                target[X] += cos(polar[A]) * MOVING_PACE;
+                target[Z] -= sin(polar[A]) * MOVING_PACE;
             } else {
                 if (bcamera) {
-                    camera_polar[A] += OBSERVING_PACE * 0.1;
-                    updateCamera(camera, target, camera_polar);
+                    polar[A] += OBSERVING_PACE * 0.1;
+                    updateCamera(camera, target, polar);
                     cout << fixed << setprecision(1) << "D pressed.\n\tPosition of camera is set to (" <<
                          camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
                 } else {
                     target[X] += OBSERVING_PACE;
-                    updatePolar(camera, target, camera_polar);
+                    updatePolar(camera, target, polar);
                     cout << fixed << setprecision(1) << "D pressed.\n\tPosition of camera target is set to (" <<
                          target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
                 }
@@ -201,19 +211,19 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'w': {
             strcpy(message, "W pressed. Watch carefully!");
             if (fpsmode) {
-                saveCamera(camera, target, camera_polar);
-                camera[X] -= sin(camera_polar[A]) * MOVING_PACE;
-                camera[Z] -= cos(camera_polar[A]) * MOVING_PACE;
-                target[X] -= sin(camera_polar[A]) * MOVING_PACE;
-                target[Z] -= cos(camera_polar[A]) * MOVING_PACE;
+                saveCamera(camera, target, polar);
+                camera[X] -= sin(polar[A]) * MOVING_PACE;
+                camera[Z] -= cos(polar[A]) * MOVING_PACE;
+                target[X] -= sin(polar[A]) * MOVING_PACE;
+                target[Z] -= cos(polar[A]) * MOVING_PACE;
             } else {
                 if (bcamera) {
-                    camera[Y] += OBSERVING_PACE;
+                    camera[Y] += MOVING_PACE;
                     cout << fixed << setprecision(1) << "W pressed.\n\tPosition of camera is set to (" <<
                          camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
                 } else {
-                    target[Y] += OBSERVING_PACE;
-                    updatePolar(camera, target, camera_polar);
+                    target[Y] += MOVING_PACE;
+                    updatePolar(camera, target, polar);
                     cout << fixed << setprecision(1) << "W pressed.\n\tPosition of camera target is set to (" <<
                          target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
                 }
@@ -224,20 +234,20 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 's': {
             strcpy(message, "S pressed. Watch carefully!");
             if (fpsmode) {
-                saveCamera(camera, target, camera_polar);
-                camera[X] += sin(camera_polar[A]) * MOVING_PACE;
-                camera[Z] += cos(camera_polar[A]) * MOVING_PACE;
-                target[X] += sin(camera_polar[A]) * MOVING_PACE;
-                target[Z] += cos(camera_polar[A]) * MOVING_PACE;
+                saveCamera(camera, target, polar);
+                camera[X] += sin(polar[A]) * MOVING_PACE;
+                camera[Z] += cos(polar[A]) * MOVING_PACE;
+                target[X] += sin(polar[A]) * MOVING_PACE;
+                target[Z] += cos(polar[A]) * MOVING_PACE;
             } else {
                 if (bcamera) {
-                    camera[Y] -= OBSERVING_PACE;
+                    camera[Y] -= MOVING_PACE;
                     cout << fixed << setprecision(1) << "S pressed.\n\tPosition of camera is set to (" <<
                          camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
                     strcpy(message, "S pressed. Watch carefully!");
                 } else {
-                    target[Y] -= OBSERVING_PACE;
-                    updatePolar(camera, target, camera_polar);
+                    target[Y] -= MOVING_PACE;
+                    updatePolar(camera, target, polar);
                     cout << fixed << setprecision(1) << "S pressed.\n\tPosition of camera target is set to (" <<
                          target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
                 }
@@ -248,14 +258,14 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'q': {
             if (bcamera) {
                 strcpy(message, "Q pressed. Camera is moved...nearer!");
-                camera_polar[R] *= 0.95;
-                updateCamera(camera, target, camera_polar);
+                polar[R] *= 0.95;
+                updateCamera(camera, target, polar);
                 cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera is set to (" <<
                      camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
             } else {
                 strcpy(message, "Q pressed. Camera target is moving towards +Z!");
-                target[Z] += OBSERVING_PACE;
-                updatePolar(camera, target, camera_polar);
+                target[Z] += MOVING_PACE;
+                updatePolar(camera, target, polar);
                 cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera target is set to (" <<
                      target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
             }
@@ -265,14 +275,14 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         case 'e': {
             if (bcamera) {
                 strcpy(message, "E pressed. Camera is moved...farther!");
-                camera_polar[R] *= 1.05;
-                updateCamera(camera, target, camera_polar);
+                polar[R] *= 1.05;
+                updateCamera(camera, target, polar);
                 cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera is set to (" <<
                      camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
             } else {
                 strcpy(message, "E pressed. Camera target is moving towards -Z!");
-                target[Z] -= OBSERVING_PACE;
-                updatePolar(camera, target, camera_polar);
+                target[Z] -= MOVING_PACE;
+                updatePolar(camera, target, polar);
                 cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera target is set to (" <<
                      target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
             }
@@ -301,7 +311,7 @@ void ProcessSpecialKey(int k, int x, int y) {
         // Up arrow
         case GLUT_KEY_UP: {
             if (seperationDistance < 99.9f) {
-                seperationDistance += 5.0f;
+                seperationDistance += PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
             sprintf(message,  "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
@@ -310,7 +320,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Down arrow
         case GLUT_KEY_DOWN: {
             if (seperationDistance > 0.1f) {
-                seperationDistance -= 5.0f;
+                seperationDistance -= PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
             sprintf(message,  "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
@@ -319,7 +329,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Left arrow
         case GLUT_KEY_LEFT: {
             if (alignmentDistance > 0.1f) {
-                alignmentDistance -= 5.0f;
+                alignmentDistance -= PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
             sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
@@ -328,7 +338,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Right arrow
         case GLUT_KEY_RIGHT: {
             if (alignmentDistance < 99.9f) {
-                alignmentDistance += 5.0f;
+                alignmentDistance += PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
             sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
@@ -337,7 +347,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // Home
         case GLUT_KEY_HOME: {
             if (cohesionDistance < 99.9f) {
-                cohesionDistance += 5.0f;
+                cohesionDistance += PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
             sprintf(message,  "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
@@ -346,7 +356,7 @@ void ProcessSpecialKey(int k, int x, int y) {
             // End
         case GLUT_KEY_END: {
             if (cohesionDistance > 0.1f) {
-                cohesionDistance -= 5.0f;
+                cohesionDistance -= PARA_SPEED;
             }
             cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
             sprintf(message,  "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
@@ -366,6 +376,9 @@ void PrintStatus() {
     char cameraPositionMessage[50];
     char targetPositionMessage[50];
     char cameraPolarPositonMessage[50];
+    char separationDistanceMessage[50];
+    char alignmentDistanceMessage[50];
+    char cohesionDistanceMessage[50];
 
     frame++;
     currenttime = glutGet(GLUT_ELAPSED_TIME);
@@ -381,14 +394,20 @@ void PrintStatus() {
     sprintf(targetPositionMessage, "Target Position     %2.1f   %2.1f   %2.1f",
             target[X], target[Y], target[Z]);
     sprintf(cameraPolarPositonMessage, "Camera Polar      %2.1f   %2.3f   %2.3f",
-            camera_polar[R], camera_polar[A], camera_polar[T]);
+            polar[R], polar[A], polar[T]);
+    sprintf(separationDistanceMessage, "Separation Distance           %2.1f",
+            seperationDistance);
+    sprintf(alignmentDistanceMessage, "Alignment  Distance           %2.1f",
+            alignmentDistance);
+    sprintf(cohesionDistanceMessage, "Cohesion  Distance           %2.1f",
+            cohesionDistance);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_LIGHTING);                    // 不受灯光影响
     glMatrixMode(GL_PROJECTION);            // 选择投影矩阵
     glPushMatrix();                            // 保存原矩阵
     glLoadIdentity();                        // 装入单位矩阵
-    glOrtho(-window[W] / 2, window[W] / 2, -window[H] / 2, window[H] / 2, -1, 1);    // 设置裁减区域
+    glOrtho(-640, 640, -360, 360, -1, 1);    // 设置裁减区域
     glMatrixMode(GL_MODELVIEW);                // 选择Modelview矩阵
     glPushMatrix();                            // 保存原矩阵
     glLoadIdentity();                        // 装入单位矩阵
@@ -409,6 +428,18 @@ void PrintStatus() {
     for (c = cameraPolarPositonMessage; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
     }
+    glRasterPos2f(window[W] / 2 - 240, window[H] / 2 - 125);
+    for (c = separationDistanceMessage; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
+    glRasterPos2f(window[W] / 2 - 240, window[H] / 2 - 160);
+    for (c = alignmentDistanceMessage; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
+    glRasterPos2f(window[W] / 2 - 240, window[H] / 2 - 195);
+    for (c = cohesionDistanceMessage; *c != '\0'; c++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, *c);
+    }
     glRasterPos2f(20 - window[W] / 2, 20 - window[H] / 2);
     for (c = message; *c != '\0'; c++) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *c);
@@ -426,7 +457,18 @@ void initVBO() {
     bird = new VBOBird(32);
 }
 
-void setShader() {
+void setupShader() {
+    try {
+        birdShader.compileShader("bird.vert");
+        birdShader.compileShader("bird.frag");
+        birdShader.link();
+        computeShader.compileShader("compute.vert");
+        computeShader.compileShader("compute.frag");
+        computeShader.link();
+    } catch (GLSLProgramException &e) {
+        cerr << e.what() << endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 void updateBirdShaderUniform() {

@@ -29,26 +29,11 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    try {
-        birdShader.compileShader("bird.vert");
-        birdShader.compileShader("bird.frag");
-        birdShader.link();
-        computeShader.compileShader("compute.vert");
-        computeShader.compileShader("compute.frag");
-        computeShader.link();
-//        shader.compileShader("basic.vert");
-//        shader.compileShader("basic.frag");
-//        shader.link();
-    } catch (GLSLProgramException &e) {
-        cerr << e.what() << endl;
-        exit(EXIT_FAILURE);
-    }
-
+    setupShader();
     initVBO();
     setupTexture();
     setupFBO();
     setupVAO();
-    setShader();
 
     glutMainLoop();
 

@@ -56,10 +56,6 @@ VBOBird::VBOBird(int base) {
 
     srand(static_cast<unsigned int>(time(nullptr)));
 
-//    for (int i = 0; i < nVerts * 3; i++) {
-//        v[i] += (i / 27) / 10.0;
-//    }
-
     for (int i = 0; i < nVerts; i++) {
         int f = i / 3;  // Should be floor, and why f = i / 3 ? No sense.
         auto x = static_cast<float>((f % base) * 1.0 / base);
@@ -108,10 +104,14 @@ VBOBird::VBOBird(int base) {
 
     glBindVertexArray(0);
 
+    delete[] v;
+    delete[] uv;
+    delete[] c;
+    delete[] n;
+    delete[] el;
 }
 
 void VBOBird::render() const {
     glBindVertexArray(vaoHandle);
     glDrawElements(GL_TRIANGLES, nVerts, GL_UNSIGNED_INT, ((GLubyte *) nullptr + (0)));
-
 }

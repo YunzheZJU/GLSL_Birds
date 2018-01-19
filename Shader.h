@@ -2,8 +2,8 @@
 // Created by Yunzhe on 2017/12/5.
 //
 
-#ifndef GPUBASEDRENDERING_A1_SHADER_H
-#define GPUBASEDRENDERING_A1_SHADER_H
+#ifndef GPUBASEDRENDERING_PROJECT_SHADER_H
+#define GPUBASEDRENDERING_PROJECT_SHADER_H
 
 #include "global.h"
 #include <map>
@@ -92,4 +92,4 @@ public:
     const char *getTypeString(GLenum type);
 };
 
-#endif //GPUBASEDRENDERING_A1_SHADER_H
+#endif //GPUBASEDRENDERING_PROJECT_SHADER_H

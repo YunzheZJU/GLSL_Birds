@@ -2,8 +2,8 @@
 // Created by Yunzhe on 2017/12/4.
 //
 
-#ifndef GPUBASEDRENDERING_A1_GLOBAL_H
-#define GPUBASEDRENDERING_A1_GLOBAL_H
+#ifndef GPUBASEDRENDERING_PROJECT_GLOBAL_H
+#define GPUBASEDRENDERING_PROJECT_GLOBAL_H
 
 // Include system head files
 #include <cmath>
@@ -41,18 +41,34 @@ using glm::mat3;
 // Define Pi in math
 #define PI 3.1415926
 
-// Define size of locator
-#define LOCATOR_SIZE 0.1
-
 // Define rotating pace in observing mode
 #define OBSERVING_PACE 0.5
 
 // Define moving pace in fps mode
-#define MOVING_PACE 0.2
+#define MOVING_PACE 20
 
 // Define paning pace in fps mode: Should be 1
 #define PANNING_PACE 1
 
+// Define the size of the area: width = BOUNDS, height = BOUNDS, center = (0, 0)
 #define BOUNDS 400
 
-#endif //GPUBASEDRENDERING_A1_GLOBAL_H
+// Define default camera position
+#define DEFAULT_CAMERA_X 0
+#define DEFAULT_CAMERA_Y 0
+#define DEFAULT_CAMERA_Z 350
+
+// Define default target position
+#define DEFAULT_TARGET_X 0
+#define DEFAULT_TARGET_Y 0
+#define DEFAULT_TARGET_Z 0
+
+// Define default camera polar
+#define DEFAULT_POLAR_R 350
+#define DEFAULT_POLAR_A 0
+#define DEFAULT_POLAR_T 0
+
+// Define speed of parameter control
+#define PARA_SPEED 2.5
+
+#endif //GPUBASEDRENDERING_PROJECT_GLOBAL_H
