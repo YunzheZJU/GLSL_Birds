@@ -1,9 +1,5 @@
 #version 430
 
-in vec3 Position;
-in vec3 Normal;
-in vec2 TexCoord;
-
 uniform float delta = 0.016;
 uniform float seperationDistance = 20;
 uniform float alignmentDistance = 20;
@@ -174,8 +170,6 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-//    return vec4(vec3(0.0), 1.0);
-//    return vec4(selfVelocity * 1000, 1.0);
     return vec4(velocity, 1.0);
 }
 

@@ -73,11 +73,6 @@ void main() {
     newPosition += pos;
 
     Color = selectColor(velocity);
-//    Color = mix(vec4(1.0, 0.6, 0.0, 1.0), vec4(0.0, 0.6, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
-//    if (length(velocity) < 0.2) {
-//        Color = vec4(1.0, 0.0, 0.0, 1.0);
-//    }
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
-//    gl_Position = MVP * vec4(VertexPosition + pos, 1.0);
 }

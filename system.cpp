@@ -34,8 +34,8 @@ int time_0 = clock();
 int time_1;
 float delta;
 float seperationDistance = 20.0f;
-float alignmentDistance = 20.0f;
-float cohesionDistance = 20.0f;
+float alignmentDistance = 40.0f;
+float cohesionDistance = 10.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 
 void Idle() {
@@ -501,8 +501,6 @@ void updateBirdShaderUniform() {
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
     glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, birdColorType + (int) bRandomColor);
-//    birdShader.setUniform("ModelViewMatrix", mv);
-//    birdShader.setUniform("MVP", projection * mv);
 }
 
 void updateComputeShaderUniform() {
@@ -514,9 +512,6 @@ void updateComputeShaderUniform() {
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
-    if (mouse[X] != 1000.0f) {
-        cout << "Predator at (" << mouse[X] << ", " << mouse[Y] << ", 0)." << endl;
-    }
     predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
     mouse[X] = mouse[Y] = 1000.0f;
@@ -524,10 +519,6 @@ void updateComputeShaderUniform() {
     view = mat4(1.0f);
     projection = mat4(1.0f);
     mat4 mv = view * model;
-    computeShader.setUniform("ModelMatrix", model);
-    computeShader.setUniform("ViewMatrix", view);
-    computeShader.setUniform("ProjectionMatrix", projection);
-    computeShader.setUniform("ModelViewMatrix", mv);
     computeShader.setUniform("MVP", projection * mv);
 }
 
