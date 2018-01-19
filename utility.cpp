@@ -137,7 +137,7 @@ bool screenshot(int width, int height) {
     glReadPixels(0, 0, width, height, GL_BGR, GL_UNSIGNED_BYTE, image);
 
     // Open a new file
-    sprintf(filename, "images/ScreenShot%03d.bmp", screenshotnum++);
+    sprintf(filename, "screenshot_%02d.bmp", screenshotnum++);
     fp = fopen(filename, "wb");
     if (fp == NULL) {
         cout << "Fail to open a new file!" << endl;
