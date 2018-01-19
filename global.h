@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <Windows.h>
 #include <ctime>
+#include <sstream>
 
 // Include glew and glut
 #include <glew.h>
@@ -47,8 +48,8 @@ using glm::mat3;
 // Define moving pace in fps mode
 #define MOVING_PACE 20
 
-// Define paning pace in fps mode: Should be 1
-#define PANNING_PACE 1
+// Define default base of birds
+#define DEFAULT_BASE_OF_BIRDS 32
 
 // Define the size of the area: width = BOUNDS, height = BOUNDS, center = (0, 0)
 #define BOUNDS 400

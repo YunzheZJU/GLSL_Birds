@@ -160,3 +160,10 @@ bool screenshot(int width, int height) {
 
     return true;
 }
+
+int string2int(const string &string_temp) {
+    int integer;
+    stringstream stream(string_temp);
+    stream >> integer;
+    return integer;
+}

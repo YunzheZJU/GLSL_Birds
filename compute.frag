@@ -6,9 +6,9 @@ uniform float alignmentDistance = 20;
 uniform float cohesionDistance = 20;
 uniform vec3 predator = vec3(1000, 1000, 1000);
 
-const vec2 resolution = vec2(32.0, 32.0);
-const float width = 32;
-const float height = 32;
+uniform vec2 resolution = vec2(32, 32);
+uniform float width = 32;
+uniform float height = 32;
 
 const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
