@@ -436,6 +436,7 @@ void updateBirdShaderUniform() {
     projection = glm::perspective(45.0f, 1.7778f, 0.1f, 30000.0f);
     model = mat4(1.0f);
     model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
+    model = glm::scale(model, vec3(0.7));
     mat4 mv = view * model;
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
