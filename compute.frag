@@ -4,10 +4,10 @@ in vec3 Position;
 in vec3 Normal;
 in vec2 TexCoord;
 
-uniform float delta = 0.016; // about 0.016
-uniform float seperationDistance = 20; // 20
-uniform float alignmentDistance = 40; // 40
-uniform float cohesionDistance = 20; //
+uniform float delta = 0.016;
+uniform float seperationDistance = 20;
+uniform float alignmentDistance = 20;
+uniform float cohesionDistance = 20;
 uniform vec3 predator = vec3(1000, 1000, 1000);
 
 const vec2 resolution = vec2(32.0, 32.0);
@@ -26,8 +26,6 @@ float separationThresh = 0.45;
 float alignmentThresh = 0.65;
 
 const float BOUNDS = 400.0;
-const float UPPER_BOUNDS = 200;
-const float LOWER_BOUNDS = -200;
 
 const float SPEED_LIMIT = 9.0;
 
