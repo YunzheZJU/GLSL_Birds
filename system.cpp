@@ -531,9 +531,9 @@ void updateComputeShaderUniform() {
 //    if (mouse[X] != 1000.0f) {
 //        cout << "Predator at (" << mouse[X] << ", " << mouse[Y] << ", 0)." << endl;
 //    }
-//    predator = vec3(mouse[X], mouse[Y], 0);
-//    computeShader.setUniform("predator", predator);
-//    mouse[X] = mouse[Y] = 1000.0f;
+    predator = vec3(mouse[X], mouse[Y], 0);
+    computeShader.setUniform("predator", predator);
+    mouse[X] = mouse[Y] = 1000.0f;
     model = mat4(1.0f);
     view = mat4(1.0f);
     projection = mat4(1.0f);

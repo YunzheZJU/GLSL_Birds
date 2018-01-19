@@ -116,7 +116,7 @@ vec4 velocity() {
     dist = length( dir );
 
     // 调整中心吸引的方向，在高度上出现摆动
-    dir.y *= 2.5;
+    //dir.y *= 2.5;
     velocity -= normalize( dir ) * delta * 5.;
 
     // 对两个缓存纹理（全体鸟的位置和速度）遍历
@@ -172,7 +172,7 @@ vec4 velocity() {
     }
 
     // this make tends to fly around than down or up
-    if (velocity.y > 0.) velocity.y *= (1. - 0.2 * delta);
+    //if (velocity.y > 0.) velocity.y *= (1. - 0.2 * delta);
 
     // Speed Limits
     if ( length( velocity ) > limit ) {
