@@ -32,8 +32,13 @@ const float SPEED_LIMIT = 9.0;
 layout(binding = 0) uniform sampler2D texturePosition;
 layout(binding = 1) uniform sampler2D textureVelocity;
 
-layout(location = 0) out vec4 positionOutput;
-layout(location = 1) out vec4 velocityOutput;
+layout(location = 0) out vec4 positionOutputTo0;
+layout(location = 1) out vec4 velocityOutputTo0;
+layout(location = 2) out vec4 positionOutputTo1;
+layout(location = 3) out vec4 velocityOutputTo1;
+
+subroutine void TargetSelector();
+subroutine uniform TargetSelector selectTarget;
 
 // Compute position
 vec4 position() {
@@ -179,7 +184,18 @@ vec4 velocity() {
     return vec4(velocity, 1.0);
 }
 
+subroutine(TargetSelector)
+void renderTo0() {
+	positionOutputTo0 = position();
+	velocityOutputTo0 = velocity();
+}
+
+subroutine(TargetSelector)
+void renderTo1() {
+	positionOutputTo1 = position();
+	velocityOutputTo1 = velocity();
+}
+
 void main() {
-	positionOutput = position();
-	velocityOutput = velocity();
+    selectTarget();
 }
