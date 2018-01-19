@@ -85,7 +85,7 @@ vec4 velocity() {
 
     // predator从(-0.5, -0.5, 0.0)到(0.5， 0.5, 0.0)
     // dir是捕食者相对当前鸟的位置
-    dir = predator * UPPER_BOUNDS - selfPosition;
+    dir = predator * BOUNDS - selfPosition;
     dir.z = 0.;
     // 与捕食者的距离
     dist = length( dir );

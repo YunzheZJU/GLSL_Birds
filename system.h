@@ -25,7 +25,7 @@ void Reshape(int width, int height);
 
 void ProcessMouseClick(int button, int state, int x, int y);
 
-void ProcessMouseDrag(int x, int y);
+void ProcessMouseMoving(int x, int y);
 
 void ProcessFocus(int state);
 

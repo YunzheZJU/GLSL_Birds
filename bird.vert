@@ -14,8 +14,20 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 
-uniform mat4 ModelViewMatrix;
-uniform mat4 MVP;
+subroutine vec4 ColorSelector(vec3 velocity);
+subroutine uniform ColorSelector selectColor;
+
+// Calculate color by velocity at Z axis
+subroutine(ColorSelector)
+vec4 directionalColor(vec3 velocity) {
+    return mix(vec4(1.0, 0.4, 0.1, 1.0), vec4(0.1, 0.4, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
+}
+
+// Use default color
+subroutine(ColorSelector)
+vec4 randomColor(vec3 velocity) {
+    return vec4(VertexColor, 1.0);
+}
 
 void main() {
     vec4 tmpPosition = texture2D(texturePosition, TextureUV);
@@ -60,7 +72,8 @@ void main() {
     }
     newPosition += pos;
 
-    Color = vec4(VertexColor, 1.0);
+    Color = selectColor(velocity);
+//    Color = mix(vec4(1.0, 0.6, 0.0, 1.0), vec4(0.0, 0.6, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
 //    if (length(velocity) < 0.2) {
 //        Color = vec4(1.0, 0.0, 0.0, 1.0);
 //    }

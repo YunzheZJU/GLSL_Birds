@@ -14,17 +14,19 @@ GLuint positionTexture;
 GLuint velocityTexture;
 GLuint fboHandle;
 GLuint fsQuad;
+GLuint birdColorType[2];
 mat4 model;
 mat4 view;
 mat4 projection;
 vec3 predator(1000, 1000, 1000);
 GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};                    // Position of camera
-GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y, DEFAULT_TARGET_Z};                    // Position of target of camera
+GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y,
+                     DEFAULT_TARGET_Z};                    // Position of target of camera
 GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};            // Polar coordinates of camera
 bool bcamera = true;                        // Switch of camera/target control
-bool bfocus = true;                            // Status of window focus
 bool bAnimation = true;
-int fpsmode = 2;                                    // 0:off, 1:on, 2:waiting
+bool bRandomColor = true;
+int fpsmode = 0;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
 float mouse[2] = {1000.0f, 1000.0f};
@@ -35,7 +37,6 @@ float seperationDistance = 20.0f;
 float alignmentDistance = 20.0f;
 float cohesionDistance = 20.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
-//int focus = NONE;									// Focus object by clicking RMB
 
 void Idle() {
     glutPostRedisplay();
@@ -49,11 +50,6 @@ void Reshape(int width, int height) {
     window[W] = width;
     window[H] = height;
     updateWindowcenter(window, windowcenter);
-
-    glMatrixMode(GL_PROJECTION);            // Select The Projection Matrix
-    glLoadIdentity();                        // Reset The Projection Matrix
-    gluPerspective(45.0f, 1.7778f, 0.1f, 30000.0f);    // 1.7778 = 1280 / 720
-    glMatrixMode(GL_MODELVIEW);                // Select The Modelview Matrix
 }
 
 void Redraw() {
@@ -93,7 +89,7 @@ void ProcessMouseClick(int button, int state, int x, int y) {
     }
 }
 
-void ProcessMouseDrag(int x, int y) {
+void ProcessMouseMoving(int x, int y) {
     cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
     mouse[X] = static_cast<float>((x - window[W] / 2) * 1.0 / (window[W] / 2) * 0.5);
     mouse[Y] = static_cast<float>((window[H] / 2 - y) * 1.0 / (window[H] / 2) * 0.5);
@@ -101,10 +97,10 @@ void ProcessMouseDrag(int x, int y) {
 
 void ProcessFocus(int state) {
     if (state == GLUT_LEFT) {
-        bfocus = false;
+        bAnimation = false;
         cout << "Focus is on other window." << endl;
     } else if (state == GLUT_ENTERED) {
-        bfocus = true;
+        bAnimation = true;
         cout << "Focus is on this window." << endl;
     }
 }
@@ -256,35 +252,39 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
         }
         case 'Q':
         case 'q': {
-            if (bcamera) {
-                strcpy(message, "Q pressed. Camera is moved...nearer!");
-                polar[R] *= 0.95;
-                updateCamera(camera, target, polar);
-                cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera is set to (" <<
-                     camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
-            } else {
-                strcpy(message, "Q pressed. Camera target is moving towards +Z!");
-                target[Z] += MOVING_PACE;
-                updatePolar(camera, target, polar);
-                cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera target is set to (" <<
-                     target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
+            if (!fpsmode) {
+                if (bcamera) {
+                    strcpy(message, "Q pressed. Camera is moved...nearer!");
+                    polar[R] *= 0.95;
+                    updateCamera(camera, target, polar);
+                    cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera is set to (" <<
+                         camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
+                } else {
+                    strcpy(message, "Q pressed. Camera target is moving towards +Z!");
+                    target[Z] += MOVING_PACE;
+                    updatePolar(camera, target, polar);
+                    cout << fixed << setprecision(1) << "Q pressed.\n\tPosition of camera target is set to (" <<
+                         target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
+                }
             }
             break;
         }
         case 'E':
         case 'e': {
-            if (bcamera) {
-                strcpy(message, "E pressed. Camera is moved...farther!");
-                polar[R] *= 1.05;
-                updateCamera(camera, target, polar);
-                cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera is set to (" <<
-                     camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
-            } else {
-                strcpy(message, "E pressed. Camera target is moving towards -Z!");
-                target[Z] -= MOVING_PACE;
-                updatePolar(camera, target, polar);
-                cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera target is set to (" <<
-                     target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
+            if (!fpsmode) {
+                if (bcamera) {
+                    strcpy(message, "E pressed. Camera is moved...farther!");
+                    polar[R] *= 1.05;
+                    updateCamera(camera, target, polar);
+                    cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera is set to (" <<
+                         camera[X] << ", " << camera[Y] << ", " << camera[Z] << ")." << endl;
+                } else {
+                    strcpy(message, "E pressed. Camera target is moving towards -Z!");
+                    target[Z] -= MOVING_PACE;
+                    updatePolar(camera, target, polar);
+                    cout << fixed << setprecision(1) << "E pressed.\n\tPosition of camera target is set to (" <<
+                         target[X] << ", " << target[Y] << ", " << target[Z] << ")." << endl;
+                }
             }
             break;
         }
@@ -301,6 +301,14 @@ void ProcessNormalKey(unsigned char k, int x, int y) {
             }
             break;
         }
+            // 颜色切换
+        case 'R':
+        case 'r': {
+            bRandomColor = !bRandomColor;
+            cout << "R pressed. Change color type." << endl;
+            strcpy(message, "R pressed. Change color type.");
+            break;
+        }
         default:
             break;
     }
@@ -313,8 +321,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (seperationDistance < 99.9f) {
                 seperationDistance += PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
-            sprintf(message,  "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
+            cout << fixed << setprecision(1) << "Up arrow pressed. Seperation Distance is set to " << seperationDistance
+                 << "." << endl;
+            sprintf(message, "Up arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
             break;
         }
             // Down arrow
@@ -322,8 +331,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (seperationDistance > 0.1f) {
                 seperationDistance -= PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to " << seperationDistance << "." << endl;
-            sprintf(message,  "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
+            cout << fixed << setprecision(1) << "Down arrow pressed. Seperation Distance is set to "
+                 << seperationDistance << "." << endl;
+            sprintf(message, "Down arrow pressed. Seperation Distance is set to %.1f.", seperationDistance);
             break;
         }
             // Left arrow
@@ -331,8 +341,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (alignmentDistance > 0.1f) {
                 alignmentDistance -= PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
-            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance
+                 << "." << endl;
+            sprintf(message, "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
             break;
         }
             // Right arrow
@@ -340,8 +351,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (alignmentDistance < 99.9f) {
                 alignmentDistance += PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance << "." << endl;
-            sprintf(message,  "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
+            cout << fixed << setprecision(1) << "Left arrow pressed. Alignment Distance is set to " << alignmentDistance
+                 << "." << endl;
+            sprintf(message, "Left arrow pressed. Alignment Distance is set to %.1f.", alignmentDistance);
             break;
         }
             // Home
@@ -349,8 +361,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (cohesionDistance < 99.9f) {
                 cohesionDistance += PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
-            sprintf(message,  "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
+            cout << fixed << setprecision(1) << "Home pressed. Cohesion Distance is set to " << cohesionDistance << "."
+                 << endl;
+            sprintf(message, "Home pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
             break;
         }
             // End
@@ -358,8 +371,9 @@ void ProcessSpecialKey(int k, int x, int y) {
             if (cohesionDistance > 0.1f) {
                 cohesionDistance -= PARA_SPEED;
             }
-            cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "." << endl;
-            sprintf(message,  "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
+            cout << fixed << setprecision(1) << "End pressed. Cohesion Distance is set to " << cohesionDistance << "."
+                 << endl;
+            sprintf(message, "End pressed. Cohesion Distance is set to %.1f.", cohesionDistance);
             break;
         }
         default:
@@ -469,13 +483,16 @@ void setupShader() {
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);
     }
+    GLuint birdShaderProgram = birdShader.getProgram();
+    birdColorType[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");
+    birdColorType[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");
 }
 
 void updateBirdShaderUniform() {
     birdShader.use();
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
-    projection = glm::perspective(45.0f, 1.7778f, 0.1f, 30000.0f);
+    projection = glm::perspective(45.0f, static_cast<float>(window[W] * 1.0 / window[H]), 0.1f, 30000.0f);
     model = mat4(1.0f);
     model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, vec3(0.7));
@@ -483,8 +500,9 @@ void updateBirdShaderUniform() {
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
-    birdShader.setUniform("ModelViewMatrix", mv);
-    birdShader.setUniform("MVP", projection * mv);
+    glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, birdColorType + (int) bRandomColor);
+//    birdShader.setUniform("ModelViewMatrix", mv);
+//    birdShader.setUniform("MVP", projection * mv);
 }
 
 void updateComputeShaderUniform() {
