@@ -63,8 +63,10 @@ void Redraw() {
     computeShader.use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
+    glBindImageTexture(0, positionTexture[1 - currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
+    glBindImageTexture(1, velocityTexture[1 - currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     updateComputeShaderUniform();
 //    if (bAnimation) {
         glBindVertexArray(fsQuad);
@@ -81,8 +83,10 @@ void Redraw() {
     birdShader.use();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture[currentTarget]);
+    glBindImageTexture(0, positionTexture[currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, velocityTexture[currentTarget]);
+    glBindImageTexture(1, velocityTexture[currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     updateBirdShaderUniform();
     bird->render();
     birdShader.disable();
