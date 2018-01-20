@@ -75,30 +75,30 @@ void main() {
 
     newPosition = mat3(ModelMatrix) * newPosition;
 
-//    velocity.z *= -1.;
-//    float xz = length(velocity.xz);
-//    float xyz = 1.;
-//    float x = sqrt(1. - velocity.y * velocity.y);
-//
-//    float cosry = velocity.x / xz;
-//    float sinry = velocity.z / xz;
-//
-//    float cosrz = x / xyz;
-//    float sinrz = velocity.y / xyz;
-//
-//    mat3 maty = mat3(
-//        cosry,  0,  -sinry,
-//        0,      1,  0,
-//        sinry,  0,  cosry
-//    );
-//
-//    mat3 matz = mat3(
-//        cosrz,  sinrz,  0,
-//        -sinrz, cosrz,  0,
-//        0,      0,      1
-//    );
-//
-//    newPosition = maty * matz * newPosition;
+    velocity.z *= -1.;
+    float xz = length(velocity.xz);
+    float xyz = 1.;
+    float x = sqrt(1. - velocity.y * velocity.y);
+
+    float cosry = velocity.x / xz;
+    float sinry = velocity.z / xz;
+
+    float cosrz = x / xyz;
+    float sinrz = velocity.y / xyz;
+
+    mat3 maty = mat3(
+        cosry,  0,  -sinry,
+        0,      1,  0,
+        sinry,  0,  cosry
+    );
+
+    mat3 matz = mat3(
+        cosrz,  sinrz,  0,
+        -sinrz, cosrz,  0,
+        0,      0,      1
+    );
+
+    newPosition = maty * matz * newPosition;
 
     newPosition += pos;
 
@@ -108,7 +108,7 @@ void main() {
     //    } else {
     //        Color = vec4(0.1, 1.0, 0.1, 1.0);
     //    }
-    Color = vec4(1.0, 0.0, 0.0, 1.0);
+//    Color = vec4(1.0, 0.0, 0.0, 1.0);
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
 }

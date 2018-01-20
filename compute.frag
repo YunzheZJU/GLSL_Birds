@@ -4,11 +4,9 @@ uniform float delta = 0.016;
 uniform float seperationDistance = 20;
 uniform float alignmentDistance = 20;
 uniform float cohesionDistance = 20;
-uniform vec3 predator = vec3(1000, 1000, 1000);
+uniform vec3 predator = vec3(1, 1, 1);
 
-uniform vec2 resolution = vec2(1280, 720);
-uniform float width = 32;
-uniform float height = 32;
+uniform float base = 32;
 
 const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
@@ -28,15 +26,68 @@ const float SPEED_LIMIT = 9.0;
 layout(binding = 0, rgba16f) uniform image2D imagePosition;
 layout(binding = 1, rgba16f) uniform image2D imageVelocity;
 
-layout(location = 0) out vec4 positionOutput;
-layout(location = 1) out vec4 velocityOutput;
+layout(location = 0) out vec4 FragColor;
+
+subroutine vec4 PositionGetter(ivec2 coord);
+subroutine uniform PositionGetter getPosition;
+
+subroutine vec4 VelocityGetter(ivec2 coord);
+subroutine uniform VelocityGetter getVelocity;
+
+subroutine void PositionSetter(ivec2 coord, vec4 data);
+subroutine uniform PositionSetter setPosition;
+
+subroutine void VelocitySetter(ivec2 coord, vec4 data);
+subroutine uniform VelocitySetter setVelocity;
+
+subroutine(PositionGetter)
+vec4 getUpperPosition1(ivec2 coord) {
+    return imageLoad(imagePosition, coord);
+}
+
+subroutine(PositionGetter)
+vec4 getLowerPosition1(ivec2 coord) {
+    return imageLoad(imagePosition, coord);
+}
+
+subroutine(VelocityGetter)
+vec4 getUpperVelocity1(ivec2 coord) {
+    return imageLoad(imageVelocity, coord);
+}
+
+subroutine(VelocityGetter)
+vec4 getLowerVelocity1(ivec2 coord) {
+    return imageLoad(imageVelocity, coord);
+}
+
+subroutine(PositionSetter)
+void setUpperPosition1(ivec2 coord, vec4 data) {
+    imageStore(imagePosition, coord, data);
+}
+
+subroutine(PositionSetter)
+void setLowerPosition1(ivec2 coord, vec4 data) {
+    imageStore(imagePosition, coord, data);
+}
+
+subroutine(VelocitySetter)
+void setUpperVelocity1(ivec2 coord, vec4 data) {
+    imageStore(imageVelocity, coord, data);
+}
+
+subroutine(VelocitySetter)
+void setLowerVelocity1(ivec2 coord, vec4 data) {
+    imageStore(imageVelocity, coord, data);
+}
 
 // Compute position
-vec4 position() {
+void position() {
     ivec2 uv = ivec2(gl_FragCoord.xy - 0.5);
-    vec4 tmpPos = imageLoad(imagePosition, uv);
+    vec4 tmpPos = getPosition(uv);
+//    vec4 tmpPos = imageLoad(imagePosition, uv);
     vec3 position = tmpPos.xyz;
-    vec3 velocity = imageLoad(imageVelocity, uv).xyz;
+    vec3 velocity = getVelocity(uv).xyz;
+//    vec3 velocity = imageLoad(imageVelocity, uv).xyz;
 
     float phase = tmpPos.w;
 
@@ -46,12 +97,12 @@ vec4 position() {
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
-    imageStore(imagePosition, uv, vec4( position + velocity * delta * 15 , phase ));
-    return vec4( position + velocity * delta * 15 , phase );
+    setPosition(uv, vec4( position + velocity * delta * 15 , phase ));
+//    imageStore(imagePosition, uv, vec4( position + velocity * delta * 15 , phase ));
 }
 
 // Compute velocity
-vec4 velocity() {
+void velocity() {
     // cohesionDistance再也没用到
     zoneRadius = seperationDistance + alignmentDistance + cohesionDistance;
     separationThresh = seperationDistance / zoneRadius;
@@ -112,12 +163,13 @@ vec4 velocity() {
     velocity -= normalize( dir ) * delta * 5.;
 
     // 对两个缓存纹理（全体鸟的位置和速度）遍历
-    for (float y=0.0;y<height;y++) {
-        for (float x=0.0;x<width;x++) {
+    for (float y=0.0;y<base;y++) {
+        for (float x=0.0;x<base;x++) {
             // 为啥要加0.5？不加0.5也能跑
             // 因为在取纹理的时候就是有0.5
             ivec2 ref = ivec2( x, y );
-            birdPosition = imageLoad(imagePosition, ref).xyz;
+            birdPosition = getPosition(ref).xyz;
+//            birdPosition = imageLoad(imagePosition, ref).xyz;
 
             dir = birdPosition - selfPosition;
             dist = length(dir);
@@ -144,7 +196,8 @@ vec4 velocity() {
                 float threshDelta = alignmentThresh - separationThresh;
                 float adjustedPercent = ( percent - separationThresh ) / threshDelta;
                 // 取出参照鸟的速度，把参照鸟的速度方向加到自己身上
-                birdVelocity = imageLoad(imageVelocity, ref).xyz;
+                birdVelocity = getVelocity(ref).xyz;
+//                birdVelocity = imageLoad(imageVelocity, ref).xyz;
                 f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * delta;
                 velocity += normalize(birdVelocity) * f;
             } else {
@@ -156,11 +209,8 @@ vec4 velocity() {
                 f = ( 0.5 - ( cos( adjustedPercent * PI_2 ) * -0.5 + 0.5 ) ) * delta;
 
                 velocity += normalize(dir) * f;
-
             }
-
         }
-
     }
 
     // this make tends to fly around than down or up
@@ -177,12 +227,12 @@ vec4 velocity() {
 //    return vec4(1.0);
 //    return vec4(selfVelocity, 1.0);
 
-    imageStore(imageVelocity, uv, vec4(velocity, 1.0));
-
-    return vec4(velocity, 1.0);
+    setVelocity(uv, vec4(velocity, 1.0));
+//    imageStore(imageVelocity, uv, vec4(velocity, 1.0));
 }
 
 void main() {
-	positionOutput = position();
-	velocityOutput = velocity();
+	position();
+	velocity();
+	FragColor = vec4(1.0);
 }

@@ -501,6 +501,15 @@ void setupShader() {
     positionGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerPosition");
     velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");
     velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");
+    GLuint computeShaderProgram = computeShader.getProgram();
+    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition1");
+    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition1");
+    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity1");
+    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity1");
+    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition1");
+    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition1");
+    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity1");
+    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity1");
 }
 
 void updateBirdShaderUniform() {
@@ -528,17 +537,20 @@ void updateComputeShaderUniform() {
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
-    computeShader.setUniform("resolution", vec2(base, base));
-    computeShader.setUniform("width", (GLfloat) base);
-    computeShader.setUniform("height", (GLfloat) base);
+    computeShader.setUniform("base", (GLfloat) base);
     predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
-    mouse[X] = mouse[Y] = 1000.0f;
+    mouse[X] = mouse[Y] = 1.0f;
     model = mat4(1.0f);
     view = mat4(1.0f);
     projection = mat4(1.0f);
     mat4 mv = view * model;
     computeShader.setUniform("MVP", projection * mv);
+    GLuint subroutines[4] = {
+            positionGetterCompute[activeRegion], velocityGetterCompute[activeRegion],
+            positionSetterCompute[1 - activeRegion], velocitySetterCompute[1 - activeRegion]
+    };
+    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 4, subroutines);
 }
 
 void setupTexture() {
