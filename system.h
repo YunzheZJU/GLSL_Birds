@@ -24,8 +24,6 @@ void Redraw();
 
 void Reshape(int width, int height);
 
-void ProcessMouseClick(int button, int state, int x, int y);
-
 void ProcessMouseMoving(int x, int y);
 
 void ProcessFocus(int state);
@@ -36,7 +34,7 @@ void ProcessSpecialKey(int k, int x, int y);
 
 void PrintStatus();
 
-void initVBO();
+void setupVBO();
 
 void setupShader();
 
@@ -49,5 +47,7 @@ void setupTexture();
 void setupFBO();
 
 void setupVAO();
+
+void init();
 
 #endif //GPUBASEDRENDERING_PROJECT_SYSTEM_H

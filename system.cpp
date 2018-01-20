@@ -21,10 +21,6 @@ GLuint positionGetterCompute[2];
 GLuint velocityGetterCompute[2];
 GLuint positionSetterCompute[2];
 GLuint velocitySetterCompute[2];
-mat4 model;
-mat4 view;
-mat4 projection;
-vec3 predator(1000, 1000, 1000);
 GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};                    // Position of camera
 GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y,
                      DEFAULT_TARGET_Z};                    // Position of target of camera
@@ -36,13 +32,10 @@ int fpsmode = 0;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
 float mouse[2] = {1000.0f, 1000.0f};
-int time_0 = clock();
-int time_1;
 int base = 32;
 int activeRegion = 0;
-float delta;
 float seperationDistance = 20.0f;
-float alignmentDistance = 15.0f;
+float alignmentDistance = 10.0f;
 float cohesionDistance = 10.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 
@@ -90,12 +83,6 @@ void Redraw() {
     glutSwapBuffers();
 
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
-}
-
-void ProcessMouseClick(int button, int state, int x, int y) {
-    if (state == GLUT_DOWN) {
-        cout << "Mouse button pressed." << endl;
-    }
 }
 
 void ProcessMouseMoving(int x, int y) {
@@ -476,7 +463,7 @@ void PrintStatus() {
     glEnable(GL_LIGHTING);
 }
 
-void initVBO() {
+void setupVBO() {
     bird = new VBOBird(base);
 }
 
@@ -511,6 +498,9 @@ void setupShader() {
 }
 
 void updateBirdShaderUniform() {
+    mat4 model;
+    mat4 view;
+    mat4 projection;
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, static_cast<float>(window[W] * 1.0 / window[H]), 0.1f, 30000.0f);
@@ -529,6 +519,7 @@ void updateBirdShaderUniform() {
 }
 
 void updateComputeShaderUniform() {
+    static vec3 predator(1, 1, 1);
     static double last = clock();
     static double now = 0;
     static float delta = 0;
@@ -536,15 +527,16 @@ void updateComputeShaderUniform() {
     delta = static_cast<float>((now - last) / 1000.0);
     if (delta > 1) delta = 1;
     last = now;
+    predator = vec3(mouse[X], mouse[Y], 0);
+
     computeShader.setUniform("delta", delta);
+    computeShader.setUniform("MVP", mat4(1.0f) * mat4(1.0f) * mat4(1.0f));
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
     computeShader.setUniform("base", (GLfloat) base);
-    predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
     mouse[X] = mouse[Y] = 1.0f;
-    computeShader.setUniform("MVP", mat4(1.0f) *  mat4(1.0f) * mat4(1.0f));
     GLuint subroutines[4] = {
             positionGetterCompute[activeRegion], velocityGetterCompute[activeRegion],
             positionSetterCompute[1 - activeRegion], velocitySetterCompute[1 - activeRegion]
@@ -567,13 +559,11 @@ void setupTexture() {
         int row = i / base;
 
         // Position data
-        int a = 4 * row * 2 * base + 4 * col;
         initialData[4 * row * 2 * base + 4 * col] = random[0] * BOUNDS;
         initialData[4 * row * 2 * base + 4 * col + 1] = random[1] * BOUNDS;
         initialData[4 * row * 2 * base + 4 * col + 2] = random[2] * BOUNDS;
         initialData[4 * row * 2 * base + 4 * col + 3] = 1;
         // Velocity data
-        int b = 4 * row * 2 * base + 4 * col + base * 4;
         initialData[4 * row * 2 * base + 4 * col + base * 4] = random[3];
         initialData[4 * row * 2 * base + 4 * col + base * 4 + 1] = random[4];
         initialData[4 * row * 2 * base + 4 * col + base * 4 + 2] = random[5];
@@ -644,4 +634,39 @@ void setupVAO() {
     glEnableVertexAttribArray(0);  // Vertex position
 
     glBindVertexArray(0);
+}
+
+void init() {
+    GLenum glewErr = glewInit();
+    if (glewErr != GLEW_OK) {
+        cerr << "Error occurred when initializing GLEW: " << glewGetErrorString(glewErr) << endl;
+        exit(1);
+    }
+    if (!glewIsSupported("GL_VERSION_4_3")) {
+        cerr << "OpenGL 4.3 is not supported" << endl;
+        exit(1);
+    }
+
+    string stringBaseOfBirds;
+    cout << "Enter the base number of birds you want to create (like 2, 4, 8, 16 or 32)" << endl;
+    getline(cin, stringBaseOfBirds);
+    int decision = string2int(stringBaseOfBirds);
+    if (decision != 2 && decision != 4 && decision != 8 && decision != 16 && decision != 32) {
+        cout << "Invalid input: " << stringBaseOfBirds << "." << endl;
+        cout << "Default base will be used: " << DEFAULT_BASE_OF_BIRDS << endl;
+        base = DEFAULT_BASE_OF_BIRDS;
+    } else {
+        cout << "Your decision: " << decision << endl;
+        base = decision;
+    }
+
+    // Set the background color - white
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glColor3f(0.0, 0.0, 0.0);
+
+    setupShader();
+    setupVBO();
+    setupTexture();
+    setupFBO();
+    setupVAO();
 }
