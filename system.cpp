@@ -101,7 +101,6 @@ void ProcessMouseClick(int button, int state, int x, int y) {
 }
 
 void ProcessMouseMoving(int x, int y) {
-//    cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
     mouse[X] = static_cast<float>((x - window[W] / 2) * 1.0 / (window[W] / 2) * 0.5);
     mouse[Y] = static_cast<float>((window[H] / 2 - y) * 1.0 / (window[H] / 2) * 0.5);
 }
@@ -110,9 +109,10 @@ void ProcessFocus(int state) {
     if (state == GLUT_LEFT) {
         bAnimation = false;
         cout << "Focus is on other window." << endl;
+        sprintf(message, "Focus is lost. Animation stops.");
     } else if (state == GLUT_ENTERED) {
         bAnimation = true;
-        cout << "Focus is on this window." << endl;
+        sprintf(message, "Welcome.");
     }
 }
 
@@ -524,7 +524,9 @@ void updateBirdShaderUniform() {
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
-    GLuint subroutines[3] = {birdColorType[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]};
+    GLuint subroutines[3] = {
+            birdColorType[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]
+    };
     glUniformSubroutinesuiv(GL_VERTEX_SHADER, 3, subroutines);
 }
 
@@ -554,7 +556,7 @@ void updateComputeShaderUniform() {
 }
 
 void setupTexture() {
-    // Create the compute texture
+    /////////Create the compute texture/////////
     glGenTextures(1, &computeTexture);
     glBindTexture(GL_TEXTURE_2D, computeTexture);
 
@@ -580,7 +582,7 @@ void setupTexture() {
         initialData[4 * row * 2 * base + 4 * col + base * 4 + 2] = random[5];
         initialData[4 * row * 2 * base + 4 * col + base * 4 + 3] = 1;
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base * 2, base * 2, 0, GL_RGBA, GL_FLOAT, initialData);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, base * 2, base * 2, 0, GL_RGBA, GL_FLOAT, initialData);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -590,69 +592,12 @@ void setupTexture() {
 
     delete[] initialData;
     delete[] random;
-
-    ///////////////////////////////////////////
-    glGenTextures(1, &positionTexture);
-    glGenTextures(1, &velocityTexture);
-
-    // Create the position texture
-    glBindTexture(GL_TEXTURE_2D, positionTexture);
-
-    GLfloat *positionData = new GLfloat[1024 * 4];
-    for (int i = 0; i < 1024; i++) {
-        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-
-        positionData[i * 4] = x;
-        positionData[i * 4 + 1] = y;
-        positionData[i * 4 + 2] = z;
-        positionData[i * 4 + 3] = 1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, positionData);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-    // Create the position texture
-    glBindTexture(GL_TEXTURE_2D, velocityTexture);
-
-    GLfloat *velocityData = new GLfloat[1024 * 4];
-    for (int i = 0; i < 1024; i++) {
-        GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-        GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-        GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-
-        velocityData[i * 4] = x;
-        velocityData[i * 4 + 1] = y;
-        velocityData[i * 4 + 2] = z;
-        velocityData[i * 4 + 3] = 1;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, velocityData);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-    ///////////////////////////////////////////
-
-    // Create the coord texture
+    /////////Create the coord texture/////////
     glGenTextures(1, &coordTexture);
     glBindTexture(GL_TEXTURE_2D, coordTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, base, base, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-    ///////////////////////////////////////////
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, positionTexture);
-    glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-//    glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_2D, velocityTexture);
-//    glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+    /////////////Bind image//////////////////
+    glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }
 
 void setupFBO() {
@@ -667,7 +612,6 @@ void setupFBO() {
     // Set the targets for the fragment output variables
     glDrawBuffers(1, drawBuffers);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     ///////////////////////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
@@ -686,34 +630,21 @@ void setupVAO() {
             -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
             -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f
     };
-    GLfloat tc[] = {
-            0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-            0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f
-    };
 
     // Set up the buffers
-
-    unsigned int handle[2];
-    glGenBuffers(2, handle);
+    GLuint handle[1];
+    glGenBuffers(1, handle);
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
     glBufferData(GL_ARRAY_BUFFER, 6 * 3 * sizeof(float), verts, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), tc, GL_STATIC_DRAW);
-
     // Set up the vertex array object
-
     glGenVertexArrays(1, &fsQuad);
     glBindVertexArray(fsQuad);
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
-    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);  // Vertex position
-
-    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
-    glVertexAttribPointer((GLuint) 2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(2);  // Texture coordinates
 
     glBindVertexArray(0);
 }

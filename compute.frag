@@ -23,17 +23,15 @@ const float BOUNDS = 400.0;
 
 const float SPEED_LIMIT = 9.0;
 
-layout(binding = 0, rgba16f) uniform image2D imageComputed;
-//layout(binding = 0, rgba16f) uniform image2D imagePosition;
-//layout(binding = 1, rgba16f) uniform image2D imageVelocity;
+layout(binding = 0, rgba32f) uniform image2D imageComputed;
 
 layout(location = 0) out vec4 FragColor;
 
 subroutine vec4 PositionGetter(ivec2 coord);
-subroutine uniform PositionGetter getPosition;
+layout(location = 0) subroutine uniform PositionGetter getPosition;
 
 subroutine vec4 VelocityGetter(ivec2 coord);
-subroutine uniform VelocityGetter getVelocity;
+layout(location = 1) subroutine uniform VelocityGetter getVelocity;
 
 subroutine(PositionGetter)
 vec4 getUpperPosition(ivec2 coord) {
@@ -56,10 +54,10 @@ vec4 getLowerVelocity(ivec2 coord) {
 }
 
 subroutine void PositionSetter(ivec2 coord, vec4 data);
-subroutine uniform PositionSetter setPosition;
+layout(location = 2) subroutine uniform PositionSetter setPosition;
 
 subroutine void VelocitySetter(ivec2 coord, vec4 data);
-subroutine uniform VelocitySetter setVelocity;
+layout(location = 3) subroutine uniform VelocitySetter setVelocity;
 
 subroutine(PositionSetter)
 void setUpperPosition(ivec2 coord, vec4 data) {
@@ -85,10 +83,8 @@ void setLowerVelocity(ivec2 coord, vec4 data) {
 void position() {
     ivec2 uv = ivec2(gl_FragCoord.xy - 0.5);
     vec4 tmpPos = getPosition(uv);
-//    vec4 tmpPos = imageLoad(imagePosition, uv);
     vec3 position = tmpPos.xyz;
     vec3 velocity = getVelocity(uv).xyz;
-//    vec3 velocity = imageLoad(imageVelocity, uv).xyz;
 
     float phase = tmpPos.w;
 
@@ -99,7 +95,6 @@ void position() {
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
     setPosition(uv, vec4( position + velocity * delta * 15 , phase ));
-//    imageStore(imagePosition, uv, vec4( position + velocity * delta * 15 , phase ));
 }
 
 // Compute velocity
@@ -116,9 +111,7 @@ void velocity() {
 
     // 自身的位置和速度
     vec3 selfPosition = getPosition(uv).xyz;
-//    vec3 selfPosition = imageLoad(imageComputed, uv).xyz;
     vec3 selfVelocity = getVelocity(uv).xyz;
-//    vec3 selfVelocity = imageLoad(imageVelocity, uv).xyz;
 
     float dist;
     vec3 dir; // direction
@@ -172,7 +165,6 @@ void velocity() {
             // 因为在取纹理的时候就是有0.5
             ivec2 ref = ivec2( x, y );
             birdPosition = getPosition(ref).xyz;
-//            birdPosition = imageLoad(imagePosition, ref).xyz;
 
             dir = birdPosition - selfPosition;
             dist = length(dir);
@@ -200,7 +192,6 @@ void velocity() {
                 float adjustedPercent = ( percent - separationThresh ) / threshDelta;
                 // 取出参照鸟的速度，把参照鸟的速度方向加到自己身上
                 birdVelocity = getVelocity(ref).xyz;
-//                birdVelocity = imageLoad(imageVelocity, ref).xyz;
                 f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * delta;
                 velocity += normalize(birdVelocity) * f;
             } else {
@@ -224,14 +215,7 @@ void velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
-//    if (gl_FragCoord.x == 16.5) {
-//        return vec4(1.0);
-//    }
-//    return vec4(1.0);
-//    return vec4(selfVelocity, 1.0);
-
     setVelocity(uv, vec4(velocity, 1.0));
-//    imageStore(imageVelocity, uv, vec4(velocity, 1.0));
 }
 
 void main() {

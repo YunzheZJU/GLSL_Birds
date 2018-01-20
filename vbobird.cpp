@@ -88,27 +88,27 @@ VBOBird::VBOBird(int base) {
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * 3 * sizeof(float), v, GL_STATIC_DRAW);
-    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);  // VertexPosition
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * 2 * sizeof(float), uv, GL_STATIC_DRAW);
-    glVertexAttribPointer((GLuint) 1, 2, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glVertexAttribPointer((GLuint) 1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(1);  // TextureUV
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[2]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * 3 * sizeof(float), c, GL_STATIC_DRAW);
-    glVertexAttribPointer((GLuint) 2, 3, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glVertexAttribPointer((GLuint) 2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(2);  // VertexColor
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[3]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * sizeof(float), n, GL_STATIC_DRAW);
-    glVertexAttribPointer((GLuint) 3, 1, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glVertexAttribPointer((GLuint) 3, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(3);  // VertexNumber
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[4]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * 2 * sizeof(float), uv2, GL_STATIC_DRAW);
-    glVertexAttribPointer((GLuint) 4, 2, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glVertexAttribPointer((GLuint) 4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(4);  // TextureUV
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[5]);
