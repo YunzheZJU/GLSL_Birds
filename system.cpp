@@ -12,6 +12,7 @@ Shader computeShader = Shader();
 VBOBird *bird;
 GLuint positionTexture;
 GLuint velocityTexture;
+GLuint coordTexture;
 GLuint fboHandle;
 GLuint fsQuad;
 GLuint birdColorType[2];
@@ -91,7 +92,7 @@ void ProcessMouseClick(int button, int state, int x, int y) {
 }
 
 void ProcessMouseMoving(int x, int y) {
-    cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
+//    cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
     mouse[X] = static_cast<float>((x - window[W] / 2) * 1.0 / (window[W] / 2) * 0.5);
     mouse[Y] = static_cast<float>((window[H] / 2 - y) * 1.0 / (window[H] / 2) * 0.5);
 }
@@ -528,6 +529,7 @@ void updateComputeShaderUniform() {
 void setupTexture() {
     glGenTextures(1, &positionTexture);
     glGenTextures(1, &velocityTexture);
+    glGenTextures(1, &coordTexture);
 
     // Create the position texture
     glBindTexture(GL_TEXTURE_2D, positionTexture);
@@ -574,11 +576,11 @@ void setupTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
     ///////////////////////////////////////////
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, positionTexture);
     glBindImageTexture(0, positionTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture);
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D, velocityTexture);
     glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 }
 

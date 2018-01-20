@@ -31,7 +31,6 @@ vec4 randomColor(vec3 velocity) {
 }
 
 void main() {
-    ivec2 size = imageSize(imageVelocity);
     ivec2 uv = ivec2(TextureUV2.xy);
     vec4 tmpPosition = imageLoad(imagePosition, uv);
     vec3 pos = tmpPosition.xyz;

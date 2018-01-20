@@ -25,8 +25,6 @@ const float BOUNDS = 400.0;
 
 const float SPEED_LIMIT = 9.0;
 
-layout(binding = 0) uniform sampler2D texturePosition;
-layout(binding = 1) uniform sampler2D textureVelocity;
 layout(binding = 0, rgba16f) uniform image2D imagePosition;
 layout(binding = 1, rgba16f) uniform image2D imageVelocity;
 
@@ -36,12 +34,9 @@ layout(location = 1) out vec4 velocityOutput;
 // Compute position
 vec4 position() {
     ivec2 uv = ivec2(gl_FragCoord.xy - 0.5);
-//    vec2 uv = gl_FragCoord.xy / resolution.xy;
     vec4 tmpPos = imageLoad(imagePosition, uv);
-//    vec4 tmpPos = texture2D(texturePosition, uv);
     vec3 position = tmpPos.xyz;
     vec3 velocity = imageLoad(imageVelocity, uv).xyz;
-//    vec3 velocity = texture2D(textureVelocity, uv).xyz;
 
     float phase = tmpPos.w;
 
@@ -51,6 +46,7 @@ vec4 position() {
         max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );
 
     // position + velocity即可，恒定帧率下delta无影响，15是系数
+    imageStore(imagePosition, uv, vec4( position + velocity * delta * 15 , phase ));
     return vec4( position + velocity * delta * 15 , phase );
 }
 
@@ -180,6 +176,9 @@ vec4 velocity() {
 //    }
 //    return vec4(1.0);
 //    return vec4(selfVelocity, 1.0);
+
+    imageStore(imageVelocity, uv, vec4(velocity, 1.0));
+
     return vec4(velocity, 1.0);
 }
 
