@@ -16,6 +16,7 @@ using namespace std;
 
 extern Shader birdShader;
 extern Shader computeShader;
+extern int base;
 
 void Idle();
 

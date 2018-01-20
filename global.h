@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <Windows.h>
 #include <ctime>
+#include <sstream>
 
 // Include glew and glut
 #include <glew.h>
@@ -18,12 +19,15 @@
 
 // Include glm
 #define GLM_FORCE_SWIZZLE
+
 #include <glm/glm.hpp>
+
 using glm::vec2;
 using glm::vec3;
 using glm::vec4;
 using glm::mat4;
 using glm::mat3;
+
 #include <glm/gtc/matrix_transform.hpp>
 
 // Define shortcuts for coordinate in location array
@@ -32,11 +36,11 @@ using glm::mat3;
 #define Z 2
 
 // Define abbreviate
-#define R 0		// Radius
-#define A 1		// Alpha
-#define T 2		// Theta
-#define W 0		// Width
-#define H 1		// Height
+#define R 0        // Radius
+#define A 1        // Alpha
+#define T 2        // Theta
+#define W 0        // Width
+#define H 1        // Height
 
 // Define Pi in math
 #define PI 3.1415926
@@ -47,8 +51,8 @@ using glm::mat3;
 // Define moving pace in fps mode
 #define MOVING_PACE 20
 
-// Define paning pace in fps mode: Should be 1
-#define PANNING_PACE 1
+// Define default base of birds
+#define DEFAULT_BASE_OF_BIRDS 32
 
 // Define the size of the area: width = BOUNDS, height = BOUNDS, center = (0, 0)
 #define BOUNDS 400

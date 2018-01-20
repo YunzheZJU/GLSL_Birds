@@ -39,6 +39,7 @@ private:
     bool fileExists(const string &fileName);
 
     string getExtension(const char *fileName);
+
 public:
     Shader();
 

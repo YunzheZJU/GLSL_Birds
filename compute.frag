@@ -179,6 +179,8 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
+//    return vec4(vec3(0.0), 1.0);
+//    return vec4(selfVelocity, 1.0);
     return vec4(velocity, 1.0);
 }
 

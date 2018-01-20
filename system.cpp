@@ -32,6 +32,7 @@ int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
 int time_0 = clock();
 int time_1;
+int base = 32;
 int currentTarget = 1;
 float delta;
 float seperationDistance = 20.0f;
@@ -479,7 +480,7 @@ void PrintStatus() {
 }
 
 void initVBO() {
-    bird = new VBOBird(32);
+    bird = new VBOBird(base);
 }
 
 void setupShader() {
@@ -503,7 +504,6 @@ void setupShader() {
 }
 
 void updateBirdShaderUniform() {
-    birdShader.use();
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, static_cast<float>(window[W] * 1.0 / window[H]), 0.1f, 30000.0f);
@@ -528,9 +528,9 @@ void updateComputeShaderUniform() {
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
-//    if (mouse[X] != 1000.0f) {
-//        cout << "Predator at (" << mouse[X] << ", " << mouse[Y] << ", 0)." << endl;
-//    }
+    computeShader.setUniform("resolution", vec2(base, base));
+    computeShader.setUniform("width", (GLfloat) base);
+    computeShader.setUniform("height", (GLfloat) base);
     predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
     mouse[X] = mouse[Y] = 1000.0f;
@@ -565,7 +565,7 @@ void setupTexture() {
             positionData[i * 4 + 2] = z;
             positionData[i * 4 + 3] = 1;
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, positionData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, positionData);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -587,7 +587,7 @@ void setupTexture() {
             velocityData[i * 4 + 2] = z;
             velocityData[i * 4 + 3] = 1;
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 32, 32, 0, GL_RGBA, GL_FLOAT, velocityData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, velocityData);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
