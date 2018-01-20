@@ -4,7 +4,6 @@ layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec2 TextureUV;
 layout(location = 2) in vec3 VertexColor;
 layout(location = 3) in float VertexNumber;
-layout(location = 4) in vec2 TextureUV2;
 
 layout(binding = 0, rgba32f) uniform image2D imageComputed;
 
@@ -58,7 +57,7 @@ vec4 getLowerVelocity(ivec2 coord) {
 }
 
 void main() {
-    ivec2 uv = ivec2(TextureUV2.xy);
+    ivec2 uv = ivec2(TextureUV.xy);
     vec4 tmpPosition = getPosition(uv);
     vec3 pos = tmpPosition.xyz;
     vec3 velocity = normalize(getVelocity(uv).xyz);

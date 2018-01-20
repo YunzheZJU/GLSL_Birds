@@ -21,19 +21,18 @@ GLuint positionGetterCompute[2];
 GLuint velocityGetterCompute[2];
 GLuint positionSetterCompute[2];
 GLuint velocitySetterCompute[2];
-GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};                    // Position of camera
-GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y,
-                     DEFAULT_TARGET_Z};                    // Position of target of camera
-GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};            // Polar coordinates of camera
-bool bcamera = true;                        // Switch of camera/target control
+GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};         // Position of camera
+GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y, DEFAULT_TARGET_Z};         // Position of target of camera
+GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};             // Polar coordinates of camera
+bool bcamera = true;                               // Switch of camera/target control
 bool bAnimation = true;
 bool bRandomColor = true;
 int fpsmode = 0;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
-float mouse[2] = {1000.0f, 1000.0f};
 int base = 32;
 int activeRegion = 0;
+float mouse[2] = {1000.0f, 1000.0f};
 float seperationDistance = 20.0f;
 float alignmentDistance = 10.0f;
 float cohesionDistance = 10.0f;

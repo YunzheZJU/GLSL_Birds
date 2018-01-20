@@ -1,12 +1,11 @@
 #version 430
 
+uniform float base = 32;
 uniform float delta = 0.016;
 uniform float seperationDistance = 20;
 uniform float alignmentDistance = 20;
 uniform float cohesionDistance = 20;
 uniform vec3 predator = vec3(1, 1, 1);
-
-uniform float base = 32;
 
 const float PI = 3.141592653589793;
 const float PI_2 = PI * 2.0;
