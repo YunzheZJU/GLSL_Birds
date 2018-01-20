@@ -35,7 +35,7 @@ int time_1;
 int base = 32;
 float delta;
 float seperationDistance = 20.0f;
-float alignmentDistance = 40.0f;
+float alignmentDistance = 10.0f;
 float cohesionDistance = 10.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 
@@ -576,8 +576,10 @@ void setupTexture() {
     ///////////////////////////////////////////
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, positionTexture);
+    glBindImageTexture(0, positionTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, velocityTexture);
+    glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 }
 
 void setupFBO() {

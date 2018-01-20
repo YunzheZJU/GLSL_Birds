@@ -6,7 +6,7 @@ uniform float alignmentDistance = 20;
 uniform float cohesionDistance = 20;
 uniform vec3 predator = vec3(1000, 1000, 1000);
 
-uniform vec2 resolution = vec2(32, 32);
+uniform vec2 resolution = vec2(1280, 720);
 uniform float width = 32;
 uniform float height = 32;
 
@@ -27,16 +27,21 @@ const float SPEED_LIMIT = 9.0;
 
 layout(binding = 0) uniform sampler2D texturePosition;
 layout(binding = 1) uniform sampler2D textureVelocity;
+layout(binding = 0, rgba16f) uniform image2D imagePosition;
+layout(binding = 1, rgba16f) uniform image2D imageVelocity;
 
 layout(location = 0) out vec4 positionOutput;
 layout(location = 1) out vec4 velocityOutput;
 
 // Compute position
 vec4 position() {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    vec4 tmpPos = texture2D(texturePosition, uv);
+    ivec2 uv = ivec2(gl_FragCoord.xy - 0.5);
+//    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    vec4 tmpPos = imageLoad(imagePosition, uv);
+//    vec4 tmpPos = texture2D(texturePosition, uv);
     vec3 position = tmpPos.xyz;
-    vec3 velocity = texture2D(textureVelocity, uv).xyz;
+    vec3 velocity = imageLoad(imageVelocity, uv).xyz;
+//    vec3 velocity = texture2D(textureVelocity, uv).xyz;
 
     float phase = tmpPos.w;
 
@@ -58,12 +63,12 @@ vec4 velocity() {
     zoneRadiusSquared = zoneRadius * zoneRadius;
 
     // 当前鸟的信息在缓存纹理中的uv（所有鸟的信息被存在一张相应数量的像素数目的纹理中）
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
+    ivec2 uv = ivec2(gl_FragCoord.xy);
     vec3 birdPosition, birdVelocity;
 
     // 自身的位置和速度
-    vec3 selfPosition = texture2D( texturePosition, uv ).xyz;
-    vec3 selfVelocity = texture2D( textureVelocity, uv ).xyz;
+    vec3 selfPosition = imageLoad(imagePosition, uv).xyz;
+    vec3 selfVelocity = imageLoad(imageVelocity, uv).xyz;
 
     float dist;
     vec3 dir; // direction
@@ -86,7 +91,7 @@ vec4 velocity() {
     distSquared = dist * dist;
 
     // 寻找捕食者的距离
-    float preyRadius = 150.0;
+    float preyRadius = 100.0;
     float preyRadiusSq = preyRadius * preyRadius;
 
     // 与捕食者距离过远不会引发躲避行为
@@ -115,8 +120,8 @@ vec4 velocity() {
         for (float x=0.0;x<width;x++) {
             // 为啥要加0.5？不加0.5也能跑
             // 因为在取纹理的时候就是有0.5
-            vec2 ref = vec2( x + 0.5, y + 0.5 ) / resolution.xy;
-            birdPosition = texture2D( texturePosition, ref ).xyz;
+            ivec2 ref = ivec2( x, y );
+            birdPosition = imageLoad(imagePosition, ref).xyz;
 
             dir = birdPosition - selfPosition;
             dist = length(dir);
@@ -143,7 +148,7 @@ vec4 velocity() {
                 float threshDelta = alignmentThresh - separationThresh;
                 float adjustedPercent = ( percent - separationThresh ) / threshDelta;
                 // 取出参照鸟的速度，把参照鸟的速度方向加到自己身上
-                birdVelocity = texture2D( textureVelocity, ref ).xyz;
+                birdVelocity = imageLoad(imageVelocity, ref).xyz;
                 f = ( 0.5 - cos( adjustedPercent * PI_2 ) * 0.5 + 0.5 ) * delta;
                 velocity += normalize(birdVelocity) * f;
             } else {
@@ -170,6 +175,11 @@ vec4 velocity() {
         velocity = normalize( velocity ) * limit;
     }
 
+//    if (gl_FragCoord.x == 16.5) {
+//        return vec4(1.0);
+//    }
+//    return vec4(1.0);
+//    return vec4(selfVelocity, 1.0);
     return vec4(velocity, 1.0);
 }
 

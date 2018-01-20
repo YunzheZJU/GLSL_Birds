@@ -9,6 +9,7 @@ VBOBird::VBOBird(int base) {
     nVerts = nBirds * 9;                // 9 vertices per bird
     auto *v = new float[3 * nVerts];
     auto *uv = new float[2 * nVerts];
+    auto *uv2 = new float[2 * nVerts];
     auto *c = new float[3 * nVerts];
     auto *n = new float[nVerts];
     auto *el = new GLuint[nVerts];
@@ -60,9 +61,15 @@ VBOBird::VBOBird(int base) {
         int f = i / 3;  // Should be floor, and why f = i / 3 ? No sense.
         auto x = static_cast<float>((f % base) * 1.0 / base);
         auto y = static_cast<float>((int) (f * 1.0 / base) * 1.0 / base);
+        int f2 = i / 9;  // Should be floor, and why f = i / 3 ? No sense.
+        auto x2 = static_cast<float>(f2 % base);
+        auto y2 = static_cast<float>(f2 / base);
 
         uv[i * 2] = x;
         uv[i * 2 + 1] = y;
+
+        uv2[i * 2] = x2;
+        uv2[i * 2 + 1] = y2;
 
         c[i * 3] = static_cast<float>((rand() % 100 / 100.0) * 0.8 + 0.1);
         c[i * 3 + 1] = static_cast<float>((rand() % 100 / 100.0) * 0.8 + 0.1);
@@ -76,8 +83,8 @@ VBOBird::VBOBird(int base) {
     glGenVertexArrays(1, &vaoHandle);
     glBindVertexArray(vaoHandle);
 
-    unsigned int handle[5];
-    glGenBuffers(5, handle);
+    unsigned int handle[6];
+    glGenBuffers(6, handle);
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
     glBufferData(GL_ARRAY_BUFFER, nVerts * 3 * sizeof(float), v, GL_STATIC_DRAW);
@@ -99,7 +106,12 @@ VBOBird::VBOBird(int base) {
     glVertexAttribPointer((GLuint) 3, 1, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
     glEnableVertexAttribArray(3);  // VertexNumber
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[4]);
+    glBindBuffer(GL_ARRAY_BUFFER, handle[4]);
+    glBufferData(GL_ARRAY_BUFFER, nVerts * 2 * sizeof(float), uv2, GL_STATIC_DRAW);
+    glVertexAttribPointer((GLuint) 4, 2, GL_FLOAT, GL_FALSE, 0, ((GLubyte *) nullptr + (0)));
+    glEnableVertexAttribArray(4);  // TextureUV
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[5]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, nVerts * sizeof(GLuint), el, GL_STATIC_DRAW);
 
     glBindVertexArray(0);
@@ -109,6 +121,7 @@ VBOBird::VBOBird(int base) {
     delete[] c;
     delete[] n;
     delete[] el;
+    delete[] uv2;
 }
 
 void VBOBird::render() const {

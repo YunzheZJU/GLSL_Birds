@@ -4,9 +4,10 @@ layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec2 TextureUV;
 layout(location = 2) in vec3 VertexColor;
 layout(location = 3) in float VertexNumber;
+layout(location = 4) in vec2 TextureUV2;
 
-layout(binding = 0) uniform sampler2D texturePosition;
-layout(binding = 1) uniform sampler2D textureVelocity;
+layout(binding = 0, rgba16f) uniform image2D imagePosition;
+layout(binding = 1, rgba16f) uniform image2D imageVelocity;
 
 out vec4 Color;
 
@@ -30,9 +31,11 @@ vec4 randomColor(vec3 velocity) {
 }
 
 void main() {
-    vec4 tmpPosition = texture2D(texturePosition, TextureUV);
+    ivec2 size = imageSize(imageVelocity);
+    ivec2 uv = ivec2(TextureUV2.xy);
+    vec4 tmpPosition = imageLoad(imagePosition, uv);
     vec3 pos = tmpPosition.xyz;
-    vec3 velocity = normalize(texture2D(textureVelocity, TextureUV).xyz);
+    vec3 velocity = normalize(imageLoad(imageVelocity, uv).xyz);
 
     vec3 newPosition = VertexPosition;
 
@@ -73,6 +76,11 @@ void main() {
     newPosition += pos;
 
     Color = selectColor(velocity);
+    //    if (uv.x > 16) {
+    //        Color = vec4(1.0, 0.0, 0.0, 1.0);
+    //    } else {
+    //        Color = vec4(0.1, 1.0, 0.1, 1.0);
+    //    }
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
 }
