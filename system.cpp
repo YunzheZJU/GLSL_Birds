@@ -10,12 +10,19 @@
 Shader birdShader = Shader();
 Shader computeShader = Shader();
 VBOBird *bird;
+GLuint computeTexture;
 GLuint positionTexture;
 GLuint velocityTexture;
 GLuint coordTexture;
 GLuint fboHandle;
 GLuint fsQuad;
 GLuint birdColorType[2];
+GLuint positionGetterBird[2];
+GLuint velocityGetterBird[2];
+GLuint positionGetterCompute[2];
+GLuint velocityGetterCompute[2];
+GLuint positionSetterCompute[2];
+GLuint velocitySetterCompute[2];
 mat4 model;
 mat4 view;
 mat4 projection;
@@ -34,6 +41,7 @@ float mouse[2] = {1000.0f, 1000.0f};
 int time_0 = clock();
 int time_1;
 int base = 32;
+int activeRegion = 0;
 float delta;
 float seperationDistance = 20.0f;
 float alignmentDistance = 10.0f;
@@ -65,6 +73,7 @@ void Redraw() {
         glBindVertexArray(fsQuad);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
+        activeRegion = 1 - activeRegion;
     }
     computeShader.disable();
     glFlush();
@@ -488,6 +497,10 @@ void setupShader() {
     GLuint birdShaderProgram = birdShader.getProgram();
     birdColorType[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");
     birdColorType[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");
+    positionGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperPosition");
+    positionGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerPosition");
+    velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");
+    velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");
 }
 
 void updateBirdShaderUniform() {
@@ -498,10 +511,12 @@ void updateBirdShaderUniform() {
     model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, vec3(0.7));
     mat4 mv = view * model;
+    birdShader.setUniform("base", (GLfloat) base);
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
-    glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, birdColorType + (int) bRandomColor);
+    GLuint subroutines[3] = {birdColorType[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]};
+    glUniformSubroutinesuiv(GL_VERTEX_SHADER, 3, subroutines);
 }
 
 void updateComputeShaderUniform() {
@@ -527,9 +542,46 @@ void updateComputeShaderUniform() {
 }
 
 void setupTexture() {
+    // Create the compute texture
+    glGenTextures(1, &computeTexture);
+    glBindTexture(GL_TEXTURE_2D, computeTexture);
+
+    auto *initialData = new float[base * 2 * base * 2 * 4];
+    auto *random = new float[6];
+    for (int i = 0; i < base * base; i++) {
+        for (int j = 0; j < 6; j++) {
+            random[j] = static_cast<float>(rand() % 10000 / 10000.0 - 0.5);
+        }
+        int col = i % base;
+        int row = i / base;
+
+        // Position data
+        int a = 4 * row * 2 * base + 4 * col;
+        initialData[4 * row * 2 * base + 4 * col] = random[0] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 1] = random[1] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 2] = random[2] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 3] = 1;
+        // Velocity data
+        int b = 4 * row * 2 * base + 4 * col + base * 4;
+        initialData[4 * row * 2 * base + 4 * col + base * 4] = random[3];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 1] = random[4];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 2] = random[5];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 3] = 1;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base * 2, base * 2, 0, GL_RGBA, GL_FLOAT, initialData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    delete[] initialData;
+    delete[] random;
+
+    ///////////////////////////////////////////
     glGenTextures(1, &positionTexture);
     glGenTextures(1, &velocityTexture);
-    glGenTextures(1, &coordTexture);
 
     // Create the position texture
     glBindTexture(GL_TEXTURE_2D, positionTexture);
@@ -576,26 +628,32 @@ void setupTexture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
     ///////////////////////////////////////////
+
+    // Create the coord texture
+    glGenTextures(1, &coordTexture);
+    glBindTexture(GL_TEXTURE_2D, coordTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, base, base, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+    ///////////////////////////////////////////
 //    glActiveTexture(GL_TEXTURE0);
 //    glBindTexture(GL_TEXTURE_2D, positionTexture);
-    glBindImageTexture(0, positionTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+    glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 //    glActiveTexture(GL_TEXTURE1);
 //    glBindTexture(GL_TEXTURE_2D, velocityTexture);
     glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 }
 
 void setupFBO() {
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
     glGenFramebuffers(1, &fboHandle);
     // Bind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
 
     // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture, 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, velocityTexture, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, coordTexture, 0);
 
     // Set the targets for the fragment output variables
-    glDrawBuffers(2, drawBuffers);
+    glDrawBuffers(1, drawBuffers);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     ///////////////////////////////////////////

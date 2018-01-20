@@ -15,8 +15,16 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 
+uniform float base = 32;
+
 subroutine vec4 ColorSelector(vec3 velocity);
 subroutine uniform ColorSelector selectColor;
+
+subroutine vec4 PositionGetter(ivec2 coord);
+subroutine uniform PositionGetter getPosition;
+
+subroutine vec4 VelocityGetter(ivec2 coord);
+subroutine uniform VelocityGetter getVelocity;
 
 // Calculate color by velocity at Z axis
 subroutine(ColorSelector)
@@ -30,11 +38,33 @@ vec4 randomColor(vec3 velocity) {
     return vec4(VertexColor, 1.0);
 }
 
+subroutine(PositionGetter)
+vec4 getUpperPosition(ivec2 coord) {
+    return imageLoad(imagePosition, coord);
+}
+
+subroutine(PositionGetter)
+vec4 getLowerPosition(ivec2 coord) {
+    return imageLoad(imagePosition, coord);
+}
+
+subroutine(VelocityGetter)
+vec4 getUpperVelocity(ivec2 coord) {
+    return imageLoad(imageVelocity, coord);
+}
+
+subroutine(VelocityGetter)
+vec4 getLowerVelocity(ivec2 coord) {
+    return imageLoad(imageVelocity, coord);
+}
+
 void main() {
     ivec2 uv = ivec2(TextureUV2.xy);
-    vec4 tmpPosition = imageLoad(imagePosition, uv);
+    vec4 tmpPosition = getPosition(uv);
+//    vec4 tmpPosition = imageLoad(imagePosition, uv);
     vec3 pos = tmpPosition.xyz;
-    vec3 velocity = normalize(imageLoad(imageVelocity, uv).xyz);
+    vec3 velocity = normalize(getVelocity(uv).xyz);
+//    vec3 velocity = normalize(imageLoad(imageVelocity, uv).xyz);
 
     vec3 newPosition = VertexPosition;
 
@@ -45,33 +75,31 @@ void main() {
 
     newPosition = mat3(ModelMatrix) * newPosition;
 
-    velocity.z *= -1.;
-    float xz = length(velocity.xz);
-    float xyz = 1.;
-    float x = sqrt(1. - velocity.y * velocity.y);
+//    velocity.z *= -1.;
+//    float xz = length(velocity.xz);
+//    float xyz = 1.;
+//    float x = sqrt(1. - velocity.y * velocity.y);
+//
+//    float cosry = velocity.x / xz;
+//    float sinry = velocity.z / xz;
+//
+//    float cosrz = x / xyz;
+//    float sinrz = velocity.y / xyz;
+//
+//    mat3 maty = mat3(
+//        cosry,  0,  -sinry,
+//        0,      1,  0,
+//        sinry,  0,  cosry
+//    );
+//
+//    mat3 matz = mat3(
+//        cosrz,  sinrz,  0,
+//        -sinrz, cosrz,  0,
+//        0,      0,      1
+//    );
+//
+//    newPosition = maty * matz * newPosition;
 
-    float cosry = velocity.x / xz;
-    float sinry = velocity.z / xz;
-
-    float cosrz = x / xyz;
-    float sinrz = velocity.y / xyz;
-
-    mat3 maty = mat3(
-        cosry,  0,  -sinry,
-        0,      1,  0,
-        sinry,  0,  cosry
-    );
-
-    mat3 matz = mat3(
-        cosrz,  sinrz,  0,
-        -sinrz, cosrz,  0,
-        0,      0,      1
-    );
-
-    newPosition = maty * matz * newPosition;
-    if (length(pos) < 0.4) {
-        pos = vec3(100.5);
-    }
     newPosition += pos;
 
     Color = selectColor(velocity);
@@ -80,6 +108,7 @@ void main() {
     //    } else {
     //        Color = vec4(0.1, 1.0, 0.1, 1.0);
     //    }
+    Color = vec4(1.0, 0.0, 0.0, 1.0);
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
 }
