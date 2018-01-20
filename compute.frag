@@ -23,8 +23,9 @@ const float BOUNDS = 400.0;
 
 const float SPEED_LIMIT = 9.0;
 
-layout(binding = 0, rgba16f) uniform image2D imagePosition;
-layout(binding = 1, rgba16f) uniform image2D imageVelocity;
+layout(binding = 0, rgba16f) uniform image2D imageComputed;
+//layout(binding = 0, rgba16f) uniform image2D imagePosition;
+//layout(binding = 1, rgba16f) uniform image2D imageVelocity;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -34,50 +35,50 @@ subroutine uniform PositionGetter getPosition;
 subroutine vec4 VelocityGetter(ivec2 coord);
 subroutine uniform VelocityGetter getVelocity;
 
+subroutine(PositionGetter)
+vec4 getUpperPosition(ivec2 coord) {
+    return imageLoad(imageComputed, coord);
+}
+
+subroutine(PositionGetter)
+vec4 getLowerPosition(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x, coord.y + base));
+}
+
+subroutine(VelocityGetter)
+vec4 getUpperVelocity(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y));
+}
+
+subroutine(VelocityGetter)
+vec4 getLowerVelocity(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y + base));
+}
+
 subroutine void PositionSetter(ivec2 coord, vec4 data);
 subroutine uniform PositionSetter setPosition;
 
 subroutine void VelocitySetter(ivec2 coord, vec4 data);
 subroutine uniform VelocitySetter setVelocity;
 
-subroutine(PositionGetter)
-vec4 getUpperPosition1(ivec2 coord) {
-    return imageLoad(imagePosition, coord);
-}
-
-subroutine(PositionGetter)
-vec4 getLowerPosition1(ivec2 coord) {
-    return imageLoad(imagePosition, coord);
-}
-
-subroutine(VelocityGetter)
-vec4 getUpperVelocity1(ivec2 coord) {
-    return imageLoad(imageVelocity, coord);
-}
-
-subroutine(VelocityGetter)
-vec4 getLowerVelocity1(ivec2 coord) {
-    return imageLoad(imageVelocity, coord);
+subroutine(PositionSetter)
+void setUpperPosition(ivec2 coord, vec4 data) {
+    imageStore(imageComputed, coord, data);
 }
 
 subroutine(PositionSetter)
-void setUpperPosition1(ivec2 coord, vec4 data) {
-    imageStore(imagePosition, coord, data);
-}
-
-subroutine(PositionSetter)
-void setLowerPosition1(ivec2 coord, vec4 data) {
-    imageStore(imagePosition, coord, data);
+void setLowerPosition(ivec2 coord, vec4 data) {
+    imageStore(imageComputed, ivec2(coord.x, coord.y + base), data);
 }
 
 subroutine(VelocitySetter)
-void setUpperVelocity1(ivec2 coord, vec4 data) {
-    imageStore(imageVelocity, coord, data);
+void setUpperVelocity(ivec2 coord, vec4 data) {
+    imageStore(imageComputed, ivec2(coord.x + base, coord.y), data);
 }
 
 subroutine(VelocitySetter)
-void setLowerVelocity1(ivec2 coord, vec4 data) {
-    imageStore(imageVelocity, coord, data);
+void setLowerVelocity(ivec2 coord, vec4 data) {
+    imageStore(imageComputed, ivec2(coord.x + base, coord.y + base), data);
 }
 
 // Compute position
@@ -114,8 +115,10 @@ void velocity() {
     vec3 birdPosition, birdVelocity;
 
     // 自身的位置和速度
-    vec3 selfPosition = imageLoad(imagePosition, uv).xyz;
-    vec3 selfVelocity = imageLoad(imageVelocity, uv).xyz;
+    vec3 selfPosition = getPosition(uv).xyz;
+//    vec3 selfPosition = imageLoad(imageComputed, uv).xyz;
+    vec3 selfVelocity = getVelocity(uv).xyz;
+//    vec3 selfVelocity = imageLoad(imageVelocity, uv).xyz;
 
     float dist;
     vec3 dir; // direction

@@ -44,7 +44,7 @@ int base = 32;
 int activeRegion = 0;
 float delta;
 float seperationDistance = 20.0f;
-float alignmentDistance = 10.0f;
+float alignmentDistance = 15.0f;
 float cohesionDistance = 10.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 
@@ -502,14 +502,14 @@ void setupShader() {
     velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");
     velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");
     GLuint computeShaderProgram = computeShader.getProgram();
-    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition1");
-    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition1");
-    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity1");
-    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity1");
-    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition1");
-    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition1");
-    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity1");
-    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity1");
+    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition");
+    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition");
+    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity");
+    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity");
+    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition");
+    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition");
+    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity");
+    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity");
 }
 
 void updateBirdShaderUniform() {
@@ -652,7 +652,7 @@ void setupTexture() {
     glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 //    glActiveTexture(GL_TEXTURE1);
 //    glBindTexture(GL_TEXTURE_2D, velocityTexture);
-    glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
+//    glBindImageTexture(1, velocityTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
 }
 
 void setupFBO() {
