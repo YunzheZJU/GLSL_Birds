@@ -7,10 +7,10 @@ int main(int argc, char *argv[]) {
     int decision = string2int(stringBaseOfBirds);
     if (decision != 2 && decision != 4 && decision != 8 && decision != 16 && decision != 32) {
         cout << "Invalid input: " << stringBaseOfBirds << "." << endl;
-        cout << "Default base will be used: " << DEFAULT_BASE_OF_BIRDS << ". " << endl;
+        cout << "Default base will be used: " << DEFAULT_BASE_OF_BIRDS << endl;
         base = DEFAULT_BASE_OF_BIRDS;
     } else {
-        cout << "Your decision: " << decision << "." << endl;
+        cout << "Your decision: " << decision << endl;
         base = decision;
     }
 

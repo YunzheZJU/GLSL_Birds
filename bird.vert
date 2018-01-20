@@ -6,7 +6,7 @@ layout(location = 2) in vec3 VertexColor;
 layout(location = 3) in float VertexNumber;
 layout(location = 4) in vec2 TextureUV2;
 
-layout(binding = 0, rgba32f) uniform image2D imageCompute;
+layout(binding = 0, rgba32f) uniform image2D imageComputed;
 
 out vec4 Color;
 
@@ -26,35 +26,35 @@ subroutine vec4 VelocityGetter(ivec2 coord);
 layout(location = 2) subroutine uniform VelocityGetter getVelocity;
 
 // Calculate color by velocity at Z axis
-subroutine(ColorSelector)
+layout(index = 0) subroutine(ColorSelector)
 vec4 directionalColor(vec3 velocity) {
     return mix(vec4(1.0, 0.4, 0.1, 1.0), vec4(0.1, 0.4, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
 }
 
 // Use default color
-subroutine(ColorSelector)
+layout(index = 1) subroutine(ColorSelector)
 vec4 randomColor(vec3 velocity) {
     return vec4(VertexColor, 1.0);
 }
 
-subroutine(PositionGetter)
+layout(index = 2) subroutine(PositionGetter)
 vec4 getUpperPosition(ivec2 coord) {
-    return imageLoad(imageCompute, coord);
+    return imageLoad(imageComputed, coord);
 }
 
-subroutine(PositionGetter)
+layout(index = 3) subroutine(PositionGetter)
 vec4 getLowerPosition(ivec2 coord) {
-    return imageLoad(imageCompute, ivec2(coord.x, coord.y + base));
+    return imageLoad(imageComputed, ivec2(coord.x, coord.y + base));
 }
 
-subroutine(VelocityGetter)
+layout(index = 4) subroutine(VelocityGetter)
 vec4 getUpperVelocity(ivec2 coord) {
-    return imageLoad(imageCompute, ivec2(coord.x + base, coord.y));
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y));
 }
 
-subroutine(VelocityGetter)
+layout(index = 5) subroutine(VelocityGetter)
 vec4 getLowerVelocity(ivec2 coord) {
-    return imageLoad(imageCompute, ivec2(coord.x + base, coord.y + base));
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y + base));
 }
 
 void main() {

@@ -11,12 +11,10 @@ Shader birdShader = Shader();
 Shader computeShader = Shader();
 VBOBird *bird;
 GLuint computeTexture;
-GLuint positionTexture;
-GLuint velocityTexture;
 GLuint coordTexture;
 GLuint fboHandle;
 GLuint fsQuad;
-GLuint birdColorType[2];
+GLuint colorTypeBird[2];
 GLuint positionGetterBird[2];
 GLuint velocityGetterBird[2];
 GLuint positionGetterCompute[2];
@@ -495,21 +493,21 @@ void setupShader() {
         exit(EXIT_FAILURE);
     }
     GLuint birdShaderProgram = birdShader.getProgram();
-    birdColorType[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");
-    birdColorType[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");
-    positionGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperPosition");
-    positionGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerPosition");
-    velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");
-    velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");
+    colorTypeBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");               // 0
+    colorTypeBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");                    // 1
+    positionGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperPosition");          // 2
+    positionGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerPosition");          // 3
+    velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");          // 4
+    velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");          // 5
     GLuint computeShaderProgram = computeShader.getProgram();
-    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition");
-    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition");
-    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity");
-    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity");
-    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition");
-    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition");
-    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity");
-    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity");
+    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition");  // 0
+    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition");  // 1
+    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity");  // 2
+    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity");  // 3
+    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition");  // 4
+    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition");  // 5
+    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity");  // 6
+    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity");  // 7
 }
 
 void updateBirdShaderUniform() {
@@ -525,16 +523,19 @@ void updateBirdShaderUniform() {
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
     GLuint subroutines[3] = {
-            birdColorType[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]
+            colorTypeBird[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]
     };
     glUniformSubroutinesuiv(GL_VERTEX_SHADER, 3, subroutines);
 }
 
 void updateComputeShaderUniform() {
-    time_1 = clock();
-    delta = static_cast<float>((time_1 - time_0) / 1000.0);
+    static double last = clock();
+    static double now = 0;
+    static float delta = 0;
+    now = clock();
+    delta = static_cast<float>((now - last) / 1000.0);
     if (delta > 1) delta = 1;
-    time_0 = time_1;
+    last = now;
     computeShader.setUniform("delta", delta);
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
@@ -543,11 +544,7 @@ void updateComputeShaderUniform() {
     predator = vec3(mouse[X], mouse[Y], 0);
     computeShader.setUniform("predator", predator);
     mouse[X] = mouse[Y] = 1.0f;
-    model = mat4(1.0f);
-    view = mat4(1.0f);
-    projection = mat4(1.0f);
-    mat4 mv = view * model;
-    computeShader.setUniform("MVP", projection * mv);
+    computeShader.setUniform("MVP", mat4(1.0f) *  mat4(1.0f) * mat4(1.0f));
     GLuint subroutines[4] = {
             positionGetterCompute[activeRegion], velocityGetterCompute[activeRegion],
             positionSetterCompute[1 - activeRegion], velocitySetterCompute[1 - activeRegion]

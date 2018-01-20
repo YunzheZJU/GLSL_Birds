@@ -33,22 +33,22 @@ layout(location = 0) subroutine uniform PositionGetter getPosition;
 subroutine vec4 VelocityGetter(ivec2 coord);
 layout(location = 1) subroutine uniform VelocityGetter getVelocity;
 
-subroutine(PositionGetter)
+layout(index = 0) subroutine(PositionGetter)
 vec4 getUpperPosition(ivec2 coord) {
     return imageLoad(imageComputed, coord);
 }
 
-subroutine(PositionGetter)
+layout(index = 1) subroutine(PositionGetter)
 vec4 getLowerPosition(ivec2 coord) {
     return imageLoad(imageComputed, ivec2(coord.x, coord.y + base));
 }
 
-subroutine(VelocityGetter)
+layout(index = 2) subroutine(VelocityGetter)
 vec4 getUpperVelocity(ivec2 coord) {
     return imageLoad(imageComputed, ivec2(coord.x + base, coord.y));
 }
 
-subroutine(VelocityGetter)
+layout(index = 3) subroutine(VelocityGetter)
 vec4 getLowerVelocity(ivec2 coord) {
     return imageLoad(imageComputed, ivec2(coord.x + base, coord.y + base));
 }
@@ -59,22 +59,22 @@ layout(location = 2) subroutine uniform PositionSetter setPosition;
 subroutine void VelocitySetter(ivec2 coord, vec4 data);
 layout(location = 3) subroutine uniform VelocitySetter setVelocity;
 
-subroutine(PositionSetter)
+layout(index = 4) subroutine(PositionSetter)
 void setUpperPosition(ivec2 coord, vec4 data) {
     imageStore(imageComputed, coord, data);
 }
 
-subroutine(PositionSetter)
+layout(index = 5) subroutine(PositionSetter)
 void setLowerPosition(ivec2 coord, vec4 data) {
     imageStore(imageComputed, ivec2(coord.x, coord.y + base), data);
 }
 
-subroutine(VelocitySetter)
+layout(index = 6) subroutine(VelocitySetter)
 void setUpperVelocity(ivec2 coord, vec4 data) {
     imageStore(imageComputed, ivec2(coord.x + base, coord.y), data);
 }
 
-subroutine(VelocitySetter)
+layout(index = 7) subroutine(VelocitySetter)
 void setLowerVelocity(ivec2 coord, vec4 data) {
     imageStore(imageComputed, ivec2(coord.x + base, coord.y + base), data);
 }
@@ -207,7 +207,7 @@ void velocity() {
         }
     }
 
-    // this make tends to fly around than down or up
+    // This make tends to fly around than down or up
     if (velocity.y > 0.) velocity.y *= (1. - 0.2 * delta);
 
     // Speed Limits
