@@ -7,8 +7,6 @@ Project of GPU Based Rendering 2017 @ ZJU.
 Do parallel calculations with GLSL!
 With use of image variable and FBO, it would be quite easy!
 
-View the demo [here][demo]!
-
 Table of Contents
 -----------------
 
@@ -218,7 +216,6 @@ For any question, please mail to [yunzhe@zju.edu.cn][Mail]
 
 
 [status]: https://img.shields.io/badge/status-finished-green.svg "Project Status: Finished"
-[demo]: https://foo.com
 
 [S0]: docs/0.png
 [S1]: docs/1.png
