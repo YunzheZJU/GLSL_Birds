@@ -7,6 +7,8 @@ Project of GPU Based Rendering 2017 @ ZJU.
 Do parallel calculations with GLSL!
 With use of image variable and FBO, it would be quite easy!
 
+View the demo [here][demo]!
+
 Table of Contents
 -----------------
 
@@ -216,19 +218,20 @@ For any question, please mail to [yunzhe@zju.edu.cn][Mail]
 
 
 [status]: https://img.shields.io/badge/status-finished-green.svg "Project Status: Finished"
+[demo]: https://foo.com
 
-[S0]: documents/0.png
-[S1]: documents/1.png
-[S2]: documents/2.png
-[S3]: documents/3.png
-[S4]: documents/4.png
-[S5]: documents/5.png
-[S6]: documents/6.png
-[S7]: documents/7.png
-[S8]: documents/8.png
-[S9]: documents/9.png
-[S10]: documents/10.png
-[S11]: documents/11.png
+[S0]: docs/0.png
+[S1]: docs/1.png
+[S2]: docs/2.png
+[S3]: docs/3.png
+[S4]: docs/4.png
+[S5]: docs/5.png
+[S6]: docs/6.png
+[S7]: docs/7.png
+[S8]: docs/8.png
+[S9]: docs/9.png
+[S10]: docs/10.png
+[S11]: docs/11.png
 
 [MIT]: /LICENCE_MIT.md
 [yunzhe]: https://github.com/YunzheZJU
