@@ -71,7 +71,7 @@ Analysis
     ▲子流程“避让/亲近”
 
     鸟群的位置和速度信息分别存放于两张纹理图片中，每次更新时（每秒约60次）读入旧的位置和速度信息，更新每一只鸟的位置和速度信息，再将新的位置应用于每一只鸟身上，重新绘制每一个顶点的位置。此节中将着重介绍更新过程中每一个个体所表现出的避让、附和和亲近过程，而忽略OpenGL和GLSL端的各种设置过程。
-    如Figure 1和Figure 2所示，每一只鸟在更新速度信息时，都会在以自身为中心的一定范围r内寻找其他鸟，并根据它与自身的距离d与最大距离r的比值persent的处于哪一区域内，做出相应的判断：易知percent的大小处于(0, 1)，我们设定一个“独立阈值”（如0.45）和“对齐阈值”（如0.65），则当前鸟与目标鸟的位置关系可能有三种：小于“独立阈值”；大于等于“独立阈值”小于“对齐阈值”；大于等于“对齐阈值”。
+    每一只鸟在更新速度信息时，都会在以自身为中心的一定范围r内寻找其他鸟，并根据它与自身的距离d与最大距离r的比值persent的处于哪一区域内，做出相应的判断：易知percent的大小处于(0, 1)，我们设定一个“独立阈值”（如0.45）和“对齐阈值”（如0.65），则当前鸟与目标鸟的位置关系可能有三种：小于“独立阈值”；大于等于“独立阈值”小于“对齐阈值”；大于等于“对齐阈值”。
     1. 小于“独立阈值”。此时两鸟的间距被判定为过小，当前鸟的在自身速度的基础上增加一个反向避让的速度。由于速度的大小会被最后的速度限制所处理，所以主要作用是影响速度方向。
     ```c
     if (percent < separationThresh) { // low
@@ -105,7 +105,7 @@ Analysis
         velocity += normalize(dir) * f;
     }
     ```
-    而在实际应用过程中，我设置了三个值，分别为Seperation Distance、Alignment Distance和Cohesion Distance。独立阈值separationThresh和对齐阈值alignmentThresh的计算方法如Figure 6所示，zoneRadius即上文提到的以自身为中心的半径r，这保证了在Seperation Distance和Alignment Distance都大于等于0 的情况下，对齐阈值始终大于等于独立阈值。
+    而在实际应用过程中，我设置了三个值，分别为Seperation Distance、Alignment Distance和Cohesion Distance。独立阈值separationThresh和对齐阈值alignmentThresh的计算方法中，zoneRadius即上文提到的以自身为中心的半径r，这保证了在Seperation Distance和Alignment Distance都大于等于0的情况下，对齐阈值始终大于等于独立阈值。
     ```c
     separationThresh = seperationDistance / zoneRadius;
     alignmentThresh = (seperationDistance + alignmentDistance) / zoneRadius;
