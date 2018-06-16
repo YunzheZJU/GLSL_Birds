@@ -4,12 +4,8 @@ layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec2 TextureUV;
 layout(location = 2) in vec3 VertexColor;
 layout(location = 3) in float VertexNumber;
-layout(location = 4) in vec2 TextureUV2;
 
-layout(binding = 0) uniform sampler2D texturePosition;
-layout(binding = 1) uniform sampler2D textureVelocity;
-layout(binding = 0, rgba16f) uniform image2D imagePosition;
-layout(binding = 1, rgba16f) uniform image2D imageVelocity;
+layout(binding = 0, rgba32f) uniform image2D imageComputed;
 
 out vec4 Color;
 
@@ -17,29 +13,54 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 
+uniform float base = 32;
+
 subroutine vec4 ColorSelector(vec3 velocity);
-subroutine uniform ColorSelector selectColor;
+layout(location = 0) subroutine uniform ColorSelector selectColor;
+
+subroutine vec4 PositionGetter(ivec2 coord);
+layout(location = 1) subroutine uniform PositionGetter getPosition;
+
+subroutine vec4 VelocityGetter(ivec2 coord);
+layout(location = 2) subroutine uniform VelocityGetter getVelocity;
 
 // Calculate color by velocity at Z axis
-subroutine(ColorSelector)
+layout(index = 0) subroutine(ColorSelector)
 vec4 directionalColor(vec3 velocity) {
     return mix(vec4(1.0, 0.4, 0.1, 1.0), vec4(0.1, 0.4, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
 }
 
 // Use default color
-subroutine(ColorSelector)
+layout(index = 1) subroutine(ColorSelector)
 vec4 randomColor(vec3 velocity) {
     return vec4(VertexColor, 1.0);
 }
 
+layout(index = 2) subroutine(PositionGetter)
+vec4 getUpperPosition(ivec2 coord) {
+    return imageLoad(imageComputed, coord);
+}
+
+layout(index = 3) subroutine(PositionGetter)
+vec4 getLowerPosition(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x, coord.y + base));
+}
+
+layout(index = 4) subroutine(VelocityGetter)
+vec4 getUpperVelocity(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y));
+}
+
+layout(index = 5) subroutine(VelocityGetter)
+vec4 getLowerVelocity(ivec2 coord) {
+    return imageLoad(imageComputed, ivec2(coord.x + base, coord.y + base));
+}
+
 void main() {
-    ivec2 size = imageSize(imageVelocity);
-    ivec2 uv = ivec2(TextureUV2.xy);
-    vec4 tmpPosition = imageLoad(imagePosition, uv);
-//    vec4 tmpPosition = texture2D(texturePosition, TextureUV);
+    ivec2 uv = ivec2(TextureUV.xy);
+    vec4 tmpPosition = getPosition(uv);
     vec3 pos = tmpPosition.xyz;
-//    vec3 velocity = normalize(imageLoad(imageVelocity, uv).xyz);
-    vec3 velocity = normalize(texture2D(textureVelocity, TextureUV).xyz);
+    vec3 velocity = normalize(getVelocity(uv).xyz);
 
     vec3 newPosition = VertexPosition;
 
@@ -74,19 +95,10 @@ void main() {
     );
 
     newPosition = maty * matz * newPosition;
-    if (length(pos) < 0.4) {
-        pos = vec3(100.5);
-    }
+
     newPosition += pos;
 
     Color = selectColor(velocity);
-//    Color = mix(vec4(1.0, 0.6, 0.0, 1.0), vec4(0.0, 0.6, 1.0, 1.0), (velocity.z + 1.0) / 2.0);
-//    if (uv.x > 16) {
-//        Color = vec4(1.0, 0.0, 0.0, 1.0);
-//    } else {
-//        Color = vec4(0.1, 1.0, 0.1, 1.0);
-//    }
 
     gl_Position = ProjectionMatrix * ViewMatrix * vec4(newPosition, 1.0);
-//    gl_Position = MVP * vec4(VertexPosition + pos, 1.0);
 }

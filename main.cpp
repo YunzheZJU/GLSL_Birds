@@ -17,15 +17,10 @@ int main(int argc, char *argv[]) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize(1280, 720);
-    int windowHandle = glutCreateWindow("GPU Based Rendering: Project");
-
-    // Set the background color - white
-    glClearColor(1.0, 1.0, 1.0, 1.0);
-    glColor3f(0.0, 0.0, 0.0);
+    glutCreateWindow("GPU Based Rendering: Project");
 
     glutDisplayFunc(Redraw);
     glutReshapeFunc(Reshape);
-    glutMouseFunc(ProcessMouseClick);
     glutMotionFunc(ProcessMouseMoving);
     glutPassiveMotionFunc(ProcessMouseMoving);
     glutEntryFunc(ProcessFocus);
@@ -33,21 +28,7 @@ int main(int argc, char *argv[]) {
     glutSpecialFunc(ProcessSpecialKey);
     glutIdleFunc(Idle);
 
-    GLenum glewErr = glewInit();
-    if (glewErr != GLEW_OK) {
-        cerr << "Error occurred when initializing GLEW: " << glewGetErrorString(glewErr) << endl;
-        exit(1);
-    }
-    if (!glewIsSupported("GL_VERSION_4_3")) {
-        cerr << "OpenGL 4.3 is not supported" << endl;
-        exit(1);
-    }
-
-    setupShader();
-    initVBO();
-    setupTexture();
-    setupFBO();
-    setupVAO();
+    init();
 
     glutMainLoop();
 

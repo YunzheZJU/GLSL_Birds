@@ -10,35 +10,32 @@
 Shader birdShader = Shader();
 Shader computeShader = Shader();
 VBOBird *bird;
-GLuint positionTexture[2];
-GLuint velocityTexture[2];
+GLuint computeTexture;
+GLuint coordTexture;
 GLuint fboHandle;
 GLuint fsQuad;
-GLuint birdColorType[2];
-GLuint renderTarget[2];
-mat4 model;
-mat4 view;
-mat4 projection;
-vec3 predator(1000, 1000, 1000);
-GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};                    // Position of camera
-GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y,
-                     DEFAULT_TARGET_Z};                    // Position of target of camera
-GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};            // Polar coordinates of camera
-bool bcamera = true;                        // Switch of camera/target control
+GLuint colorTypeBird[2];
+GLuint positionGetterBird[2];
+GLuint velocityGetterBird[2];
+GLuint positionGetterCompute[2];
+GLuint velocityGetterCompute[2];
+GLuint positionSetterCompute[2];
+GLuint velocitySetterCompute[2];
+GLfloat camera[3] = {DEFAULT_CAMERA_X, DEFAULT_CAMERA_Y, DEFAULT_CAMERA_Z};         // Position of camera
+GLfloat target[3] = {DEFAULT_TARGET_X, DEFAULT_TARGET_Y, DEFAULT_TARGET_Z};         // Position of target of camera
+GLfloat polar[3] = {DEFAULT_POLAR_R, DEFAULT_POLAR_A, DEFAULT_POLAR_T};             // Polar coordinates of camera
+bool bcamera = true;                               // Switch of camera/target control
 bool bAnimation = true;
 bool bRandomColor = true;
 int fpsmode = 0;                                    // 0:off, 1:on, 2:waiting
 int window[2] = {1280, 720};                        // Window size
 int windowcenter[2];                                // Center of this window, to be updated
-int time_0 = clock();
-int time_1;
 int base = 32;
-int currentTarget = 1;
-float delta;
-float seperationDistance = 20.0f;
-float alignmentDistance = 20.0f;
-float cohesionDistance = 20.0f;
+int activeRegion = 0;
 float mouse[2] = {1000.0f, 1000.0f};
+float seperationDistance = 20.0f;
+float alignmentDistance = 10.0f;
+float cohesionDistance = 10.0f;
 char message[70] = "Welcome!";                        // Message string to be shown
 
 void Idle() {
@@ -61,32 +58,21 @@ void Redraw() {
     glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
     glDisable(GL_DEPTH_TEST);
     computeShader.use();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[1 - currentTarget]);
-    glBindImageTexture(0, positionTexture[1 - currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[1 - currentTarget]);
-    glBindImageTexture(1, velocityTexture[1 - currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     updateComputeShaderUniform();
-//    if (bAnimation) {
+    if (bAnimation) {
         glBindVertexArray(fsQuad);
         glDrawArrays(GL_TRIANGLES, 0, 6);
         glBindVertexArray(0);
-//    }
+        activeRegion = 1 - activeRegion;
+    }
     computeShader.disable();
     glFlush();
     ///////////////////Draw the birds///////////////////
+    birdShader.use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
-    birdShader.use();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, positionTexture[currentTarget]);
-    glBindImageTexture(0, positionTexture[currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, velocityTexture[currentTarget]);
-    glBindImageTexture(1, velocityTexture[currentTarget], 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA16F);
     updateBirdShaderUniform();
     bird->render();
     birdShader.disable();
@@ -95,18 +81,10 @@ void Redraw() {
     PrintStatus();
     glutSwapBuffers();
 
-    currentTarget = 1 - currentTarget;
     GLUtils::checkForOpenGLError(__FILE__, __LINE__);
 }
 
-void ProcessMouseClick(int button, int state, int x, int y) {
-    if (state == GLUT_DOWN) {
-        cout << "Mouse button pressed." << endl;
-    }
-}
-
 void ProcessMouseMoving(int x, int y) {
-    cout << "Mouse moves to (" << x << ", " << y << ")." << endl;
     mouse[X] = static_cast<float>((x - window[W] / 2) * 1.0 / (window[W] / 2) * 0.5);
     mouse[Y] = static_cast<float>((window[H] / 2 - y) * 1.0 / (window[H] / 2) * 0.5);
 }
@@ -115,9 +93,10 @@ void ProcessFocus(int state) {
     if (state == GLUT_LEFT) {
         bAnimation = false;
         cout << "Focus is on other window." << endl;
+        sprintf(message, "Focus is lost. Animation stops.");
     } else if (state == GLUT_ENTERED) {
         bAnimation = true;
-        cout << "Focus is on this window." << endl;
+        sprintf(message, "Welcome.");
     }
 }
 
@@ -483,7 +462,7 @@ void PrintStatus() {
     glEnable(GL_LIGHTING);
 }
 
-void initVBO() {
+void setupVBO() {
     bird = new VBOBird(base);
 }
 
@@ -500,14 +479,27 @@ void setupShader() {
         exit(EXIT_FAILURE);
     }
     GLuint birdShaderProgram = birdShader.getProgram();
-    birdColorType[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");
-    birdColorType[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");
+    colorTypeBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "directionalColor");               // 0
+    colorTypeBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "randomColor");                    // 1
+    positionGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperPosition");          // 2
+    positionGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerPosition");          // 3
+    velocityGetterBird[0] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getUpperVelocity");          // 4
+    velocityGetterBird[1] = glGetSubroutineIndex(birdShaderProgram, GL_VERTEX_SHADER, "getLowerVelocity");          // 5
     GLuint computeShaderProgram = computeShader.getProgram();
-    renderTarget[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "renderTo0");
-    renderTarget[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "renderTo1");
+    positionGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperPosition");  // 0
+    positionGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerPosition");  // 1
+    velocityGetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getUpperVelocity");  // 2
+    velocityGetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "getLowerVelocity");  // 3
+    positionSetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperPosition");  // 4
+    positionSetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerPosition");  // 5
+    velocitySetterCompute[0] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setUpperVelocity");  // 6
+    velocitySetterCompute[1] = glGetSubroutineIndex(computeShaderProgram, GL_FRAGMENT_SHADER, "setLowerVelocity");  // 7
 }
 
 void updateBirdShaderUniform() {
+    mat4 model;
+    mat4 view;
+    mat4 projection;
     view = glm::lookAt(vec3(camera[X], camera[Y], camera[Z]), vec3(target[X], target[Y], target[Z]),
                        vec3(0.0f, 1.0f, 0.0f));
     projection = glm::perspective(45.0f, static_cast<float>(window[W] * 1.0 / window[H]), 0.1f, 30000.0f);
@@ -515,108 +507,97 @@ void updateBirdShaderUniform() {
     model = glm::rotate(model, glm::radians(90.0f), vec3(0.0f, 1.0f, 0.0f));
     model = glm::scale(model, vec3(0.7));
     mat4 mv = view * model;
+    birdShader.setUniform("base", (GLfloat) base);
     birdShader.setUniform("ModelMatrix", model);
     birdShader.setUniform("ViewMatrix", view);
     birdShader.setUniform("ProjectionMatrix", projection);
-    glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, birdColorType + (int) bRandomColor);
-//    birdShader.setUniform("ModelViewMatrix", mv);
-//    birdShader.setUniform("MVP", projection * mv);
+    GLuint subroutines[3] = {
+            colorTypeBird[(int) bRandomColor], positionGetterBird[activeRegion], velocityGetterBird[activeRegion]
+    };
+    glUniformSubroutinesuiv(GL_VERTEX_SHADER, 3, subroutines);
 }
 
 void updateComputeShaderUniform() {
-    time_1 = clock();
-    delta = static_cast<float>((time_1 - time_0) / 1000.0);
+    static vec3 predator(1, 1, 1);
+    static double last = clock();
+    static double now = 0;
+    static float delta = 0;
+    now = clock();
+    delta = static_cast<float>((now - last) / 1000.0);
     if (delta > 1) delta = 1;
-    time_0 = time_1;
+    last = now;
+    predator = vec3(mouse[X], mouse[Y], 0);
+
     computeShader.setUniform("delta", delta);
+    computeShader.setUniform("MVP", mat4(1.0f) * mat4(1.0f) * mat4(1.0f));
     computeShader.setUniform("seperationDistance", seperationDistance);
     computeShader.setUniform("alignmentDistance", alignmentDistance);
     computeShader.setUniform("cohesionDistance", cohesionDistance);
-    computeShader.setUniform("resolution", vec2(base, base));
-    computeShader.setUniform("width", (GLfloat) base);
-    computeShader.setUniform("height", (GLfloat) base);
-    predator = vec3(mouse[X], mouse[Y], 0);
+    computeShader.setUniform("base", (GLfloat) base);
     computeShader.setUniform("predator", predator);
-    mouse[X] = mouse[Y] = 1000.0f;
-    model = mat4(1.0f);
-    view = mat4(1.0f);
-    projection = mat4(1.0f);
-    mat4 mv = view * model;
-    computeShader.setUniform("ModelMatrix", model);
-    computeShader.setUniform("ViewMatrix", view);
-    computeShader.setUniform("ProjectionMatrix", projection);
-    computeShader.setUniform("ModelViewMatrix", mv);
-    computeShader.setUniform("MVP", projection * mv);
-    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, renderTarget + currentTarget);
+    mouse[X] = mouse[Y] = 1.0f;
+    GLuint subroutines[4] = {
+            positionGetterCompute[activeRegion], velocityGetterCompute[activeRegion],
+            positionSetterCompute[1 - activeRegion], velocitySetterCompute[1 - activeRegion]
+    };
+    glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 4, subroutines);
 }
 
 void setupTexture() {
-    glGenTextures(2, positionTexture);
-    glGenTextures(2, velocityTexture);
+    /////////Create the compute texture/////////
+    glGenTextures(1, &computeTexture);
+    glBindTexture(GL_TEXTURE_2D, computeTexture);
 
-    for (int num = 0; num < 2; num++) {
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, positionTexture[num]);
-
-        GLfloat *positionData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 * BOUNDS - BOUNDS / 2);
-
-            positionData[i * 4] = x;
-            positionData[i * 4 + 1] = y;
-            positionData[i * 4 + 2] = z;
-            positionData[i * 4 + 3] = 1;
+    auto *initialData = new float[base * 2 * base * 2 * 4];
+    auto *random = new float[6];
+    for (int i = 0; i < base * base; i++) {
+        for (int j = 0; j < 6; j++) {
+            random[j] = static_cast<float>(rand() % 10000 / 10000.0 - 0.5);
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, positionData);
+        int col = i % base;
+        int row = i / base;
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-
-        // Create the position texture
-        glBindTexture(GL_TEXTURE_2D, velocityTexture[num]);
-
-        GLfloat *velocityData = new GLfloat[1024 * 4];
-        for (int i = 0; i < 1024; i++) {
-            GLfloat x = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat y = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-            GLfloat z = static_cast<GLfloat>(rand() % 10000 / 10000.0 - 0.5);
-
-            velocityData[i * 4] = x;
-            velocityData[i * 4 + 1] = y;
-            velocityData[i * 4 + 2] = z;
-            velocityData[i * 4 + 3] = 1;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, base, base, 0, GL_RGBA, GL_FLOAT, velocityData);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        // Position data
+        initialData[4 * row * 2 * base + 4 * col] = random[0] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 1] = random[1] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 2] = random[2] * BOUNDS;
+        initialData[4 * row * 2 * base + 4 * col + 3] = 1;
+        // Velocity data
+        initialData[4 * row * 2 * base + 4 * col + base * 4] = random[3];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 1] = random[4];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 2] = random[5];
+        initialData[4 * row * 2 * base + 4 * col + base * 4 + 3] = 1;
     }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, base * 2, base * 2, 0, GL_RGBA, GL_FLOAT, initialData);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    delete[] initialData;
+    delete[] random;
+    /////////Create the coord texture/////////
+    glGenTextures(1, &coordTexture);
+    glBindTexture(GL_TEXTURE_2D, coordTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, base, base, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    /////////////Bind image//////////////////
+    glBindImageTexture(0, computeTexture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }
 
 void setupFBO() {
-    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+    GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
     glGenFramebuffers(1, &fboHandle);
     // Bind the framebuffer
     glBindFramebuffer(GL_FRAMEBUFFER, fboHandle);
 
     // Bind the texture to the FBO
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, positionTexture[0], 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, velocityTexture[0], 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, positionTexture[1], 0);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, velocityTexture[1], 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, coordTexture, 0);
 
     // Set the targets for the fragment output variables
-    glDrawBuffers(4, drawBuffers);
+    glDrawBuffers(1, drawBuffers);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
     ///////////////////////////////////////////
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (result == GL_FRAMEBUFFER_COMPLETE) {
@@ -635,34 +616,56 @@ void setupVAO() {
             -1.0f, -1.0f, 0.0f, 1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f,
             -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, -1.0f, 1.0f, 0.0f
     };
-    GLfloat tc[] = {
-            0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-            0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f
-    };
 
     // Set up the buffers
-
-    unsigned int handle[2];
-    glGenBuffers(2, handle);
+    GLuint handle[1];
+    glGenBuffers(1, handle);
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
     glBufferData(GL_ARRAY_BUFFER, 6 * 3 * sizeof(float), verts, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
-    glBufferData(GL_ARRAY_BUFFER, 6 * 2 * sizeof(float), tc, GL_STATIC_DRAW);
-
     // Set up the vertex array object
-
     glGenVertexArrays(1, &fsQuad);
     glBindVertexArray(fsQuad);
 
     glBindBuffer(GL_ARRAY_BUFFER, handle[0]);
-    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer((GLuint) 0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);  // Vertex position
 
-    glBindBuffer(GL_ARRAY_BUFFER, handle[1]);
-    glVertexAttribPointer((GLuint) 2, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(2);  // Texture coordinates
-
     glBindVertexArray(0);
+}
+
+void init() {
+    GLenum glewErr = glewInit();
+    if (glewErr != GLEW_OK) {
+        cerr << "Error occurred when initializing GLEW: " << glewGetErrorString(glewErr) << endl;
+        exit(1);
+    }
+    if (!glewIsSupported("GL_VERSION_4_3")) {
+        cerr << "OpenGL 4.3 is not supported" << endl;
+        exit(1);
+    }
+
+    string stringBaseOfBirds;
+    cout << "Enter the base number of birds you want to create (like 2, 4, 8, 16 or 32)" << endl;
+    getline(cin, stringBaseOfBirds);
+    int decision = string2int(stringBaseOfBirds);
+    if (decision != 2 && decision != 4 && decision != 8 && decision != 16 && decision != 32) {
+        cout << "Invalid input: " << stringBaseOfBirds << "." << endl;
+        cout << "Default base will be used: " << DEFAULT_BASE_OF_BIRDS << endl;
+        base = DEFAULT_BASE_OF_BIRDS;
+    } else {
+        cout << "Your decision: " << decision << endl;
+        base = decision;
+    }
+
+    // Set the background color - white
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+    glColor3f(0.0, 0.0, 0.0);
+
+    setupShader();
+    setupVBO();
+    setupTexture();
+    setupFBO();
+    setupVAO();
 }
